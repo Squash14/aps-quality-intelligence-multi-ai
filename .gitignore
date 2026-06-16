@@ -1,0 +1,57 @@
+# ==========================
+# macOS
+# ==========================
+.DS_Store
+__MACOSX/
+Thumbs.db
+.DS_Store
+
+# Dependencies
+node_modules/
+*.egg-info/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Copilot
+.copilot-cache/
+.copilot/
+mcp-config.json
+config/mcp-config.json
+
+# Generated MCP configs
+.mcp.json
+*.config.local.toml
+clients/**/mcp-config.json
+clients/**/config.toml
+.codex/config.toml
+.codex/*.config.toml
+.claude/settings.local.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Output files
+output/
+dist/
+build/
+
+# Secrets
+credentials.json
+*.key
+*.pem

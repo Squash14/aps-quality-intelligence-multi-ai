@@ -1,0 +1,17 @@
+{
+    "mcpServers": {
+        "__SERVER_NAME__": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "__MCP_PACKAGE__",
+                "__ORG__"
+            ],
+            "env": {
+                "AZURE_DEVOPS_ORG_URL": "__ORG_URL__",
+                "AZURE_DEVOPS_PAT": "__PAT__"
+            }
+        }
+    }
+}
