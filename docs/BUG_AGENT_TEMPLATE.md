@@ -8,7 +8,7 @@ Use este modelo sempre que chamar o `qa-bug-specialist`. Ele foi montado a parti
 Use o agente qa-bug-specialist para criar um bug.
 
 Projeto:
-Tipo de bug: Bug em producao | Bug
+Tipo de bug: Bug em produção | Bug
 Feature/User Story/Task relacionada:
 Cenario testado:
 Ambiente:
@@ -41,15 +41,15 @@ Evidencias:
 Campos mais importantes:
 
 * `Projeto`: projeto do Azure DevOps, por exemplo `Arquitetura`.
-* `Tipo de bug`: use `Bug em producao` quando o defeito foi encontrado em producao; caso contrario use `Bug` ou deixe o agente inferir pelo projeto.
+* `Tipo de bug`: use `Bug em produção` quando o defeito foi encontrado em producao; caso contrario use `Bug` ou deixe o agente inferir pelo projeto. Se escrever `Bug em producao`, o agente deve normalizar para `Bug em produção`.
 * `Feature/User Story/Task relacionada`: informe o ID quando souber. O agente deve validar no Azure DevOps e usar como parent hierarquico quando fizer sentido.
 * `Cenario testado`: fluxo QA que estava sendo executado.
 * `Erro encontrado`: comportamento errado observado durante o teste.
 * `Resultado atual`: o que o sistema fez.
 * `Resultado esperado`: o que deveria acontecer.
-* `Causa do problema`: campo obrigatorio para `Bug em producao`. Informe quando souber. Exemplo observado: `Erros de Codificacao`.
+* `Causa do problema`: campo obrigatorio para `Bug em produção`. Informe quando souber. Exemplo observado aceito pelo Azure DevOps: `Erros de Codificação`. Se escrever `Erros de Codificacao`, o agente deve normalizar para `Erros de Codificação`.
 * `Direcionar para`: informe somente o nome da pessoa. O agente deve localizar a identidade no Azure DevOps e preencher `Assigned To`.
-* `Evidencias`: cole ou anexe prints, videos e arquivos no prompt.
+* `Evidencias`: cole ou anexe prints, videos e arquivos no prompt. Se nao anexar nada, o Bug sera criado com `Evidencias: Nao informado`.
 
 Campos recomendados para evitar triagem incompleta:
 
@@ -67,15 +67,17 @@ O agente deve:
 * verificar duplicidade por titulo, mensagem, funcionalidade, massa de teste e Work Item relacionado;
 * descobrir Area e Iteration a partir do Work Item relacionado ou padrao do projeto;
 * verificar a sprint ativa e preencher a Iteration correta quando o usuario nao informar;
-* validar Feature/User Story/Task informada e usar como parent quando adequado;
-* preencher `Assigned To` quando `Direcionar para` for informado;
-* preencher `Custom.Causadoproblema` para `Bug em producao`;
+* validar Feature/User Story/Task informada e usar como parent quando adequado; se a criacao nao aceitar relacao no payload inicial, criar o Bug primeiro e depois vincular o parent com link hierarquico;
+* preencher `Assigned To` quando `Direcionar para` for informado; se a busca direta de identidade nao retornar resultado, buscar Work Items recentes atribuidos/criados por esse nome e reutilizar a identidade quando houver correspondencia unica;
+* preencher `Custom.Causadoproblema` para `Bug em produção`;
+* normalizar valores conhecidos do projeto `Arquitetura`, como `Bug em produção` e `Erros de Codificação`;
+* se a criacao falhar por valor fora da lista permitida, corrigir o label e tentar novamente;
 * anexar evidencias quando o MCP suportar;
 * criar o Bug sem pedir confirmacao se nao houver duplicidade e todos os campos obrigatorios estiverem definidos.
 
-## Campos Obrigatorios Conhecidos Para Bug Em Producao
+## Campos Obrigatorios Conhecidos Para Bug Em Produção
 
-Consulta feita no Azure DevOps para o tipo `Bug em producao` indicou estes campos obrigatorios:
+Consulta feita no Azure DevOps para o tipo `Bug em produção` indicou estes campos obrigatorios:
 
 | Campo | Reference name | Observacao |
 | --- | --- | --- |
@@ -86,7 +88,7 @@ Consulta feita no Azure DevOps para o tipo `Bug em producao` indicou estes campo
 | Causa do problema | `Custom.Causadoproblema` | Obrigatorio. |
 | Demanda aprovada | `Custom.Demandaaprovada` | Usar `false`, salvo evidencia contraria. |
 
-As opcoes permitidas de `Custom.Causadoproblema` nao foram retornadas pelo MCP nesta validacao. Se o usuario nao informar a causa e o agente nao conseguir inferir com seguranca a partir de metadados ou padroes do projeto, ele deve perguntar antes de criar.
+Valor de `Custom.Causadoproblema` validado no projeto `Arquitetura`: `Erros de Codificação`. Se o usuario nao informar a causa e o agente nao conseguir inferir com seguranca a partir de metadados ou padroes do projeto, ele deve perguntar antes de criar.
 
 ## Exemplo
 
@@ -94,13 +96,13 @@ As opcoes permitidas de `Custom.Causadoproblema` nao foram retornadas pelo MCP n
 Use o agente qa-bug-specialist para criar um bug.
 
 Projeto: Arquitetura
-Tipo de bug: Bug em producao
+Tipo de bug: Bug em produção
 Feature/User Story/Task relacionada: 8227
 Cenario testado: Consulta de produto por EAN na Politica de Desconto
 Ambiente: Producao
 Perfil/usuario usado: usuario comercial com permissao de edicao
 Massa de teste: EAN 7890000000000, produto Produto Exemplo
-Causa do problema: Erros de Codificacao
+Causa do problema: Erros de Codificação
 Direcionar para: Gustavo
 
 Erro encontrado:

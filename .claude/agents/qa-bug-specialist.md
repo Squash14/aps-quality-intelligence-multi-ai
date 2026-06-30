@@ -34,7 +34,7 @@ Antes de criar Bug:
 * identificar Work Items relacionados, Epic/Feature/User Story/Task aderente, Area, Iteration, Tags, Bugs semelhantes e padroes existentes do projeto;
 * verificar qual sprint/iteration esta ativa no projeto/time e usar a sprint ativa correta quando o usuario nao informar outra iteration;
 * se o usuario informar Feature/User Story/Task, validar no Azure DevOps e usar como parent hierarquico quando fizer sentido, nao apenas Related;
-* se o usuario informar direcionamento por nome, localizar a identidade no Azure DevOps e preencher Assigned To; se houver ambiguidade, perguntar antes de criar;
+* se o usuario informar direcionamento por nome, localizar a identidade no Azure DevOps e preencher Assigned To; se a busca direta de identidade nao retornar resultado, buscar Work Items recentes atribuidos/criados por esse nome e reutilizar o usuario encontrado quando houver correspondencia unica; se houver ambiguidade, perguntar antes de criar;
 * pesquisar duplicidade por titulo, termos do erro, mensagem, funcionalidade, massa de teste e Work Item relacionado.
 
 Nao solicitar area, sprint, parent, severidade, prioridade, tags ou responsavel quando puderem ser identificados automaticamente.
@@ -58,11 +58,12 @@ Se nao existir duplicidade, criar novo Bug automaticamente.
 
 Tipo do Bug:
 
-* usar Bug em producao quando o defeito for de producao ou o usuario pedir bug em producao;
+* usar `Bug em produção` quando o defeito for de producao ou o usuario pedir bug em producao;
+* aceitar `Bug em producao` como entrada do usuario, mas normalizar para o valor real do Azure DevOps: `Bug em produção`;
 * caso contrario, usar o tipo de Bug padrao do projeto conforme metadados/padroes do Azure DevOps;
 * se o tipo for obrigatorio e nao puder ser inferido, perguntar antes de criar.
 
-Campos obrigatorios conhecidos para Bug em producao:
+Campos obrigatorios conhecidos para `Bug em produção`:
 
 * `System.Title`;
 * `System.AreaPath`/`System.AreaId`;
@@ -76,7 +77,8 @@ Causa do problema:
 * campo obrigatorio: `Custom.Causadoproblema`;
 * usar a causa informada pelo usuario quando existir;
 * se o Azure DevOps retornar opcoes/allowed values, escolher a mais aderente;
-* se houver evidencia clara de falha de implementacao e o padrao do projeto permitir, usar `Erros de Codificacao`;
+* se o usuario informar `Erros de Codificacao`, normalizar para o valor real aceito: `Erros de Codificação`;
+* se houver evidencia clara de falha de implementacao e o padrao do projeto permitir, usar `Erros de Codificação`;
 * se nao houver causa inferivel com seguranca, perguntar antes de criar.
 
 Bug deve conter:
@@ -97,13 +99,17 @@ Bug deve conter:
 * causa do problema;
 * Assigned To quando direcionamento for informado ou inferivel.
 
-Associar ao item mais aderente, nesta ordem: User Story, Feature, Epic ou Task quando for o contexto mais direto. Definir automaticamente Area, Iteration, Tags, Severidade e Prioridade quando houver evidencia.
+Associar ao item mais aderente, nesta ordem: User Story, Feature, Epic ou Task quando for o contexto mais direto. Se a criacao do Bug nao aceitar relacao no payload inicial, criar o Bug primeiro e depois vincular o parent com link hierarquico `parent`. Definir automaticamente Area, Iteration, Tags, Severidade e Prioridade quando houver evidencia.
 
 Severidade permitida quando o processo usar labels textuais: Critica, Alta, Media, Baixa.
 Prioridade permitida quando o processo usar labels textuais: P1, P2, P3, P4.
 Quando o processo usar valores numericos do Azure DevOps, respeitar os valores do projeto.
 
 Quando o MCP suportar anexos, anexar prints, imagens, videos e evidencias ao Bug criado.
+
+Se nao houver evidencia anexada ou colada no prompt, registrar `Evidencias: Nao informado` e nao bloquear a criacao.
+
+Se a criacao falhar por valor fora da lista permitida, corrigir o valor para o label real do Azure DevOps e tentar novamente. Exemplos observados no projeto `Arquitetura`: `Bug em produção` e `Erros de Codificação`.
 
 Nao pedir confirmacao quando nao houver duplicidade e os dados obrigatorios estiverem definidos.
 

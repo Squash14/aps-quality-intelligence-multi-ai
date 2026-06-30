@@ -55,7 +55,7 @@ Antes de criar Bug:
 3. Identificar Area, Iteration e Tags a partir dos itens relacionados.
 4. Verificar qual sprint/iteration esta ativa no projeto/time e usar a sprint ativa correta quando o usuario nao informar outra iteration.
 5. Se o usuario informar Feature/User Story/Task, validar no Azure DevOps e usar como parent hierarquico quando fizer sentido, nao apenas Related.
-6. Se o usuario informar direcionamento por nome, localizar a identidade no Azure DevOps e preencher Assigned To; se houver ambiguidade, perguntar antes de criar.
+6. Se o usuario informar direcionamento por nome, localizar a identidade no Azure DevOps e preencher Assigned To. Se a busca direta de identidade nao retornar resultado, buscar Work Items recentes atribuidos/criados por esse nome e reutilizar o usuario encontrado quando houver correspondencia unica. Se houver ambiguidade, perguntar antes de criar.
 7. Pesquisar Bugs semelhantes, duplicados ou ja resolvidos por titulo, termos do erro, mensagem, funcionalidade, massa de teste e Work Item relacionado.
 8. Reutilizar padroes existentes do projeto.
 
@@ -100,11 +100,12 @@ Se nao existir Bug duplicado, criar novo Bug.
 
 Tipo do Bug:
 
-* usar `Bug em producao` quando o defeito for de producao ou o usuario pedir bug em producao;
+* usar `Bug em produção` quando o defeito for de producao ou o usuario pedir bug em producao;
+* aceitar `Bug em producao` como entrada do usuario, mas normalizar para o valor real do Azure DevOps: `Bug em produção`;
 * caso contrario, usar o tipo de Bug padrao do projeto conforme metadados/padroes do Azure DevOps;
 * se o tipo for obrigatorio e nao puder ser inferido, perguntar antes de criar.
 
-Campos obrigatorios conhecidos para `Bug em producao`:
+Campos obrigatorios conhecidos para `Bug em produção`:
 
 * `System.Title`;
 * `System.AreaPath`/`System.AreaId`;
@@ -118,7 +119,8 @@ Causa do problema:
 * campo obrigatorio: `Custom.Causadoproblema`;
 * usar a causa informada pelo usuario quando existir;
 * se o Azure DevOps retornar opcoes/allowed values, escolher a mais aderente;
-* se houver evidencia clara de falha de implementacao e o padrao do projeto permitir, usar `Erros de Codificacao`;
+* se o usuario informar `Erros de Codificacao`, normalizar para o valor real aceito: `Erros de Codificação`;
+* se houver evidencia clara de falha de implementacao e o padrao do projeto permitir, usar `Erros de Codificação`;
 * se nao houver causa inferivel com seguranca, perguntar antes de criar.
 
 Criar Bug com:
@@ -146,6 +148,8 @@ Quando houver relacionamento identificavel, associar ao item mais aderente:
 3. Epic;
 4. Task, quando for o contexto mais direto.
 
+Se a criacao do Bug nao aceitar relacao no payload inicial, criar o Bug primeiro e depois vincular o parent com link hierarquico `parent`.
+
 Definir automaticamente:
 
 * Area;
@@ -170,6 +174,10 @@ Prioridade permitida:
 * P4.
 
 Quando o MCP suportar anexos, anexar prints, imagens e evidencias ao Bug criado.
+
+Se nao houver evidencia anexada ou colada no prompt, registrar `Evidencias: Nao informado` e nao bloquear a criacao.
+
+Se a criacao falhar por valor fora da lista permitida, corrigir o valor para o label real do Azure DevOps e tentar novamente. Exemplos observados no projeto `Arquitetura`: `Bug em produção` e `Erros de Codificação`.
 
 ## Criacao
 
