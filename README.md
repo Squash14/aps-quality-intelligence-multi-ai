@@ -44,7 +44,7 @@ Agentes disponíveis nos três clientes:
 | `qa-orchestrator` | Fluxo completo de documentação QA. | `<Projeto> <WorkItemID>` |
 | `qa-bdd-specialist` | Gerar SPEC/BDD sem publicar Wiki. | Projeto, Work Item ou contexto funcional. |
 | `qa-wiki-specialist` | Auditar, localizar, criar ou atualizar Wiki. | Projeto, Work Item, arquivo/conteúdo e intenção de leitura ou publicação. |
-| `qa-bug-specialist` | Analisar defeito e criar/localizar Bug. | Projeto, descrição do defeito, evidências e relações conhecidas. |
+| `qa-bug-specialist` | Analisar defeito e criar/localizar Bug. | Use o template em `docs/BUG_AGENT_TEMPLATE.md`. |
 
 Na maioria dos casos, use `qa-orchestrator`.
 
@@ -160,8 +160,10 @@ Use o agente qa-wiki-specialist para validar o destino Wiki do Work Item Backoff
 Para Bug:
 
 ```text
-Use o agente qa-bug-specialist para analisar este defeito no projeto Backoffice: <descrição do defeito>.
+Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLATE.md.
 ```
+
+Template completo: [docs/BUG_AGENT_TEMPLATE.md](docs/BUG_AGENT_TEMPLATE.md).
 
 Validar MCP no Codex:
 

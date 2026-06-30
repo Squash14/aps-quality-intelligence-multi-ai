@@ -16,14 +16,26 @@ Receber projeto, descricao do defeito e evidencias disponiveis, analisar o probl
 Minimo necessario:
 
 * projeto;
-* descricao do defeito.
+* cenario testado ou fluxo afetado;
+* descricao do erro;
+* resultado atual;
+* resultado esperado;
+* evidencia quando existir.
 
 Opcional:
 
+* Feature, User Story, Task ou Work Item relacionado;
 * cenario;
 * passos;
 * resultado atual;
 * resultado esperado;
+* ambiente;
+* massa de teste;
+* perfil ou usuario usado;
+* recorrencia;
+* impacto;
+* causa do problema;
+* direcionar para: nome da pessoa;
 * evidencias;
 * prints;
 * videos;
@@ -41,10 +53,13 @@ Antes de criar Bug:
 1. Identificar Work Items relacionados.
 2. Identificar Epic, Feature, User Story ou Task aderente.
 3. Identificar Area, Iteration e Tags a partir dos itens relacionados.
-4. Pesquisar Bugs semelhantes, duplicados ou ja resolvidos.
-5. Reutilizar padroes existentes do projeto.
+4. Verificar qual sprint/iteration esta ativa no projeto/time e usar a sprint ativa correta quando o usuario nao informar outra iteration.
+5. Se o usuario informar Feature/User Story/Task, validar no Azure DevOps e usar como parent hierarquico quando fizer sentido, nao apenas Related.
+6. Se o usuario informar direcionamento por nome, localizar a identidade no Azure DevOps e preencher Assigned To; se houver ambiguidade, perguntar antes de criar.
+7. Pesquisar Bugs semelhantes, duplicados ou ja resolvidos por titulo, termos do erro, mensagem, funcionalidade, massa de teste e Work Item relacionado.
+8. Reutilizar padroes existentes do projeto.
 
-Nao solicitar area, sprint, parent, severidade ou prioridade quando puderem ser identificados automaticamente.
+Nao solicitar area, sprint, parent, severidade, prioridade, tags ou responsavel quando puderem ser identificados automaticamente.
 
 ## Analise Do Defeito
 
@@ -83,10 +98,34 @@ Se nao existir Bug duplicado, criar novo Bug.
 
 ## Bug
 
+Tipo do Bug:
+
+* usar `Bug em producao` quando o defeito for de producao ou o usuario pedir bug em producao;
+* caso contrario, usar o tipo de Bug padrao do projeto conforme metadados/padroes do Azure DevOps;
+* se o tipo for obrigatorio e nao puder ser inferido, perguntar antes de criar.
+
+Campos obrigatorios conhecidos para `Bug em producao`:
+
+* `System.Title`;
+* `System.AreaPath`/`System.AreaId`;
+* `System.IterationPath`/`System.IterationId`;
+* `System.State = New`;
+* `Custom.Causadoproblema`;
+* `Custom.Demandaaprovada = false`, salvo evidencia contraria.
+
+Causa do problema:
+
+* campo obrigatorio: `Custom.Causadoproblema`;
+* usar a causa informada pelo usuario quando existir;
+* se o Azure DevOps retornar opcoes/allowed values, escolher a mais aderente;
+* se houver evidencia clara de falha de implementacao e o padrao do projeto permitir, usar `Erros de Codificacao`;
+* se nao houver causa inferivel com seguranca, perguntar antes de criar.
+
 Criar Bug com:
 
 * Titulo;
 * Descricao;
+* Cenario testado;
 * Pre-condicoes;
 * Passos para reproducao;
 * Resultado atual;
@@ -94,7 +133,11 @@ Criar Bug com:
 * Impacto;
 * Risco;
 * Ambiente;
-* Evidencias.
+* Massa de teste;
+* Recorrencia;
+* Evidencias;
+* Causa do problema;
+* Assigned To quando direcionamento for informado ou inferivel.
 
 Quando houver relacionamento identificavel, associar ao item mais aderente:
 
@@ -107,6 +150,7 @@ Definir automaticamente:
 
 * Area;
 * Iteration;
+* Sprint ativa;
 * Tags;
 * Severidade;
 * Prioridade.
@@ -149,8 +193,11 @@ Tipo:
 Parent:
 Area:
 Iteration:
+Sprint ativa:
+Causa do problema:
 Severidade:
 Prioridade:
+Assigned To:
 Resultado:
 URL:
 ```
@@ -182,6 +229,8 @@ Antes de finalizar, verificar:
 * Bug criado ou localizado;
 * parent associado quando houver evidencia;
 * Area definida;
-* Iteration definida;
+* Iteration/sprint ativa definida;
+* causa do problema definida;
 * severidade e prioridade definidas;
+* Assigned To resolvido quando informado;
 * URL disponivel.
