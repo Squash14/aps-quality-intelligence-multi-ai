@@ -34,7 +34,7 @@ Check de manutencao do repositorio:
 ./scripts/check.sh
 ```
 
-O check valida sintaxe dos scripts, renderizacao MCP e paridade dos agentes em Copilot, Codex e Claude.
+O check valida sintaxe dos scripts, renderizacao MCP, presenca dos agentes e conceitos obrigatorios em Copilot, Codex e Claude.
 
 ## Windows
 
@@ -50,6 +50,12 @@ Validacao do setup:
 ```powershell
 .\scripts\validate-setup.ps1
 .\scripts\validate-setup.ps1 codex
+```
+
+Check de manutencao do repositorio:
+
+```powershell
+.\scripts\check.ps1
 ```
 
 ## Arquivos Gerados

@@ -10,6 +10,45 @@ const expectedAgents = [
   "qa-bug-specialist",
 ];
 
+const semanticRequirements = {
+  "qa-orchestrator": [
+    "<Projeto> <WorkItemID>",
+    "busca focada",
+    "output/",
+    "output/delete/",
+    "qa-bdd-specialist",
+    "qa-wiki-specialist",
+    "PAT",
+  ],
+  "qa-bdd-specialist": [
+    "SPEC",
+    "Cenarios BDD",
+    "Riscos QA",
+    "Gaps",
+    "Nao publique na Wiki",
+    "output/",
+    "nao invent",
+  ],
+  "qa-wiki-specialist": [
+    "Wiki",
+    "SPEC",
+    "search_wiki",
+    "busca focada",
+    "publicar",
+    "path",
+    "URL",
+  ],
+  "qa-bug-specialist": [
+    "Bug em produção",
+    "Erros de Codificação",
+    "Custom.Causadoproblema",
+    "Assigned To",
+    "parent",
+    "duplicidade",
+    "Evidencias: Nao informado",
+  ],
+};
+
 function read(filePath) {
   return fs.readFileSync(path.join(rootDir, filePath), "utf8");
 }
@@ -27,6 +66,21 @@ function assertIncludes(content, expected, filePath) {
     content.includes(expected),
     true,
     `${filePath} nao contem: ${expected}`,
+  );
+}
+
+function normalize(content) {
+  return content
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+function assertSemanticIncludes(content, expected, filePath) {
+  assert.equal(
+    normalize(content).includes(normalize(expected)),
+    true,
+    `${filePath} nao contem conceito obrigatorio: ${expected}`,
   );
 }
 
@@ -48,6 +102,12 @@ for (const agent of expectedAgents) {
   assertIncludes(codex, "developer_instructions", codexPath);
   assertIncludes(claude, `name: ${agent}`, claudePath);
   assertIncludes(claude, "description:", claudePath);
+
+  for (const expected of semanticRequirements[agent]) {
+    assertSemanticIncludes(copilot, expected, copilotPath);
+    assertSemanticIncludes(codex, expected, codexPath);
+    assertSemanticIncludes(claude, expected, claudePath);
+  }
 }
 
 for (const filePath of [

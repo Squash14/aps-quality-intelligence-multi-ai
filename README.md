@@ -58,8 +58,8 @@ Obrigatórios:
 * `npx`
 * acesso à organização Apsen no Azure DevOps
 * PAT do Azure DevOps com:
-  * `Work Items: Read`
-  * `Wiki: Read`
+  * `Work Items: Read & Write`
+  * `Wiki: Read & Write`, quando houver publicação Wiki
   * `Project and Team: Read`
 
 Instale o cliente que você quer usar:
@@ -374,10 +374,16 @@ Esse check valida:
 * sintaxe dos scripts shell;
 * sintaxe do renderizador Node;
 * renderização MCP para Copilot, Codex e Claude;
-* paridade dos agentes nos três clientes;
+* presença e conceitos obrigatórios dos agentes nos três clientes;
 * `git diff --check`.
 
 Windows PowerShell:
+
+```powershell
+.\scripts\check.ps1
+```
+
+Para validar setup MCP de um cliente específico no Windows:
 
 ```powershell
 .\scripts\setup-mcp.ps1 codex
@@ -441,5 +447,9 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 
 * [Guia de manutenção](docs/MAINTENANCE.md)
 * [Checklist de validação](docs/VALIDATION.md)
+* [Setup detalhado](docs/SETUP.md)
+* [Uso dos agentes](docs/USAGE.md)
+* [Troubleshooting](docs/TROUBLESHOOTING.md)
+* [Paridade dos agentes](docs/AGENT_PARITY.md)
 * [Scripts](scripts/README.md)
 * [Clientes](clients/README.md)

@@ -89,6 +89,14 @@ Antes de alterar agentes:
 4. Execute `./scripts/check.sh` para validar paridade de agentes.
 5. Valide com um Work Item real antes de compartilhar com o time.
 
+No Windows, use tambem:
+
+```powershell
+.\scripts\check.ps1
+```
+
+O check de agentes valida existencia dos tres formatos e conceitos obrigatorios por agente. Ele nao substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
+
 Antes de alterar scripts de setup:
 
 ```bash
@@ -112,6 +120,7 @@ Checklist de PR:
 * README e docs estao alinhados.
 * Nomes dos agentes batem com os arquivos em `.github/agents/`.
 * Agentes equivalentes existem em `.codex/agents/` e `.claude/agents/`.
+* Conceitos obrigatorios dos agentes passam em `scripts/validate-agent-assets.mjs`.
 * Scripts de setup e validacao continuam alinhados com os docs.
 * Um fluxo com Work Item real foi verificado quando houve mudanca de comportamento dos agentes.
 
