@@ -137,6 +137,21 @@ Depois feche a sessão Codex aberta e inicie outra:
 codex --profile aps-quality-intelligence-multi-ai
 ```
 
+No Codex CLI, comandos de permissao como `/allow-all` nao sao suportados dentro da sessao. Se precisar reduzir prompts de aprovacao, defina isso ao iniciar o Codex:
+
+```bash
+codex --profile aps-quality-intelligence-multi-ai \
+  --sandbox workspace-write \
+  --ask-for-approval on-request
+```
+
+Para uma sessao totalmente liberada, use somente em ambiente confiavel:
+
+```bash
+codex --profile aps-quality-intelligence-multi-ai \
+  --dangerously-bypass-approvals-and-sandbox
+```
+
 ### Dentro do Codex
 
 Para o fluxo completo:
@@ -319,7 +334,15 @@ qa-orchestrator
 Backoffice 11234
 ```
 
-No Codex e no Claude, prefira pedir o agente explicitamente em português:
+No Claude Code, comandos como `/allow-all` podem existir conforme a versao/configuracao do cliente.
+
+No Codex CLI, `/allow-all` nao existe. Configure permissoes por flags ao iniciar o cliente, por exemplo:
+
+```bash
+codex --profile aps-quality-intelligence-multi-ai --sandbox workspace-write --ask-for-approval on-request
+```
+
+No Codex e no Claude, prefira pedir o agente explicitamente em portugues:
 
 ```text
 Use o agente qa-orchestrator para Backoffice 11234.
@@ -442,6 +465,7 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 | `ado` não aparece no MCP | Rode setup e validate novamente para o mesmo cliente. |
 | Agente não encontrado | Confirme que está na raiz do projeto e reinicie o cliente. |
 | Você escolheu Codex mas abriu Copilot | Feche o cliente errado e siga apenas o roteiro Codex. |
+| Codex mostra `Unrecognized command '/allow-all'` | Normal no Codex CLI. Use flags de inicializacao como `--sandbox workspace-write --ask-for-approval on-request` ou `--dangerously-bypass-approvals-and-sandbox`. |
 
 ## Documentação Complementar
 
