@@ -31,10 +31,13 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 node scripts/test-render-mcp-config.mjs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+node scripts/test-render-agents.mjs
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 node scripts/validate-agent-assets.mjs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-node scripts/render-agents.mjs agents/qa-bug-specialist.md --check
+node scripts/render-agents.mjs --check-all
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 git diff --check
