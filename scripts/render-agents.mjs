@@ -1,21 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const [, , sourcePath, flag] = process.argv;
-const checkOnly = flag === "--check";
-
-if (!sourcePath) {
-  console.error("Uso: node scripts/render-agents.mjs <agents/<nome>.md> [--check]");
-  process.exit(1);
-}
-
 const rootDir = path.resolve(new URL("..", import.meta.url).pathname);
+const KNOWN_CLIENTS = ["Claude", "Codex", "Copilot"];
 
-function parseFrontmatter(content) {
+function parseFrontmatter(content, sourceLabel) {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
 
   if (!match) {
-    throw new Error(`Frontmatter nao encontrado em ${sourcePath}`);
+    throw new Error(`Frontmatter nao encontrado ou malformado em ${sourceLabel}`);
   }
 
   const [, frontmatterBlock, rest] = match;
@@ -37,33 +30,61 @@ function parseFrontmatter(content) {
   return { fields, rest };
 }
 
-function extractSection(content, startMarker, endMarker) {
+function extractSection(content, startMarker, endMarker, sourceLabel) {
   const startIndex = content.indexOf(startMarker);
 
   if (startIndex === -1) {
-    throw new Error(`Secao "${startMarker}" nao encontrada em ${sourcePath}`);
+    throw new Error(`Secao obrigatoria "${startMarker}" nao encontrada em ${sourceLabel}`);
   }
 
   const afterStart = startIndex + startMarker.length;
   const endIndex = endMarker ? content.indexOf(endMarker, afterStart) : -1;
 
   if (endMarker && endIndex === -1) {
-    throw new Error(`Secao "${endMarker}" nao encontrada em ${sourcePath}`);
+    throw new Error(`Secao obrigatoria "${endMarker}" nao encontrada em ${sourceLabel}`);
   }
 
   return content.slice(afterStart, endIndex === -1 ? content.length : endIndex).trim();
 }
 
-function parseClientBlocks(particularitiesText) {
+function parseClientBlocks(particularitiesText, sourceLabel) {
+  const trimmed = particularitiesText.trim();
+
+  if (trimmed && !trimmed.startsWith("### ")) {
+    throw new Error(
+      `Conteudo fora de um cabecalho "### <Cliente>" em "## Particularidades Por Cliente" de ${sourceLabel}`,
+    );
+  }
+
   const blocks = {};
-  const parts = `\n${particularitiesText}`.split(/\n### /).slice(1);
+  const parts = `\n${trimmed}`.split(/\n### /).slice(1);
 
   for (const part of parts) {
     const newlineIndex = part.indexOf("\n");
     const clientName = (newlineIndex === -1 ? part : part.slice(0, newlineIndex)).trim();
     const body = newlineIndex === -1 ? "" : part.slice(newlineIndex + 1);
 
+    if (!clientName) {
+      throw new Error(`Cabecalho de cliente vazio em "## Particularidades Por Cliente" de ${sourceLabel}`);
+    }
+
+    if (!KNOWN_CLIENTS.includes(clientName)) {
+      throw new Error(
+        `Cliente desconhecido "${clientName}" em ${sourceLabel}. Clientes reconhecidos: ${KNOWN_CLIENTS.join(", ")}.`,
+      );
+    }
+
+    if (blocks[clientName] !== undefined) {
+      throw new Error(`Cliente "${clientName}" duplicado em ${sourceLabel}`);
+    }
+
     blocks[clientName] = body.trim();
+  }
+
+  for (const client of KNOWN_CLIENTS) {
+    if (blocks[client] === undefined) {
+      throw new Error(`Secao obrigatoria "### ${client}" ausente em ${sourceLabel}`);
+    }
   }
 
   return blocks;
@@ -79,12 +100,12 @@ function parseClientBlock(blockText) {
   const extraLines = [];
 
   for (const line of blockText.split("\n")) {
-    const trimmed = line.trim();
+    const trimmedLine = line.trim();
 
-    if (trimmed.startsWith("description:")) {
-      description = trimmed.slice("description:".length).trim();
-    } else if (trimmed.startsWith("nickname_candidates:")) {
-      nicknameCandidates = trimmed
+    if (trimmedLine.startsWith("description:")) {
+      description = trimmedLine.slice("description:".length).trim();
+    } else if (trimmedLine.startsWith("nickname_candidates:")) {
+      nicknameCandidates = trimmedLine
         .slice("nickname_candidates:".length)
         .split(",")
         .map((item) => item.trim())
@@ -108,44 +129,70 @@ function stripCodeFences(text) {
     .join("\n");
 }
 
-const raw = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
-const { fields, rest } = parseFrontmatter(raw);
-const name = fields.name;
-const defaultDescription = fields.description;
+/**
+ * Fully in-memory: parses raw canonical source text and returns the
+ * rendered output for the three clients. No filesystem access.
+ */
+export function renderFromSource(raw, sourceLabel) {
+  const { fields, rest } = parseFrontmatter(raw, sourceLabel);
+  const name = fields.name;
+  const defaultDescription = fields.description;
 
-if (!name || !defaultDescription) {
-  throw new Error(`"name" ou "description" ausente no frontmatter de ${sourcePath}`);
+  if (!name || !defaultDescription) {
+    throw new Error(`"name" ou "description" ausente no frontmatter de ${sourceLabel}`);
+  }
+
+  const sharedBody = extractSection(rest, "## Comportamento Compartilhado", "## Particularidades Por Cliente", sourceLabel);
+  const particularitiesRaw = extractSection(rest, "## Particularidades Por Cliente", null, sourceLabel);
+  const clientBlocks = parseClientBlocks(particularitiesRaw, sourceLabel);
+
+  const claude = parseClientBlock(clientBlocks["Claude"]);
+  const copilot = parseClientBlock(clientBlocks["Copilot"]);
+  const codex = parseClientBlock(clientBlocks["Codex"]);
+
+  const claudeDescription = claude.description || defaultDescription;
+  const claudeBody = composeBody(sharedBody, claude.extra);
+  const claudeOutput = `---\nname: ${name}\ndescription: ${claudeDescription}\n---\n\n${claudeBody}\n`;
+
+  const copilotDescription = copilot.description || defaultDescription;
+  const copilotBody = composeBody(sharedBody, copilot.extra);
+  const copilotOutput = `---\ndescription: "${copilotDescription}"\nname: ${name}\n---\n\n# ${name} instructions\n\n${copilotBody}\n`;
+
+  const codexDescription = codex.description || defaultDescription;
+  const codexBody = stripCodeFences(composeBody(sharedBody, codex.extra));
+  const nicknames = codex.nicknameCandidates || [];
+  const nicknameList = nicknames.map((item) => `"${item}"`).join(", ");
+  const codexOutput = `name = "${name}"\ndescription = "${codexDescription}"\ndeveloper_instructions = """\n${codexBody}\n"""\nnickname_candidates = [${nicknameList}]\n`;
+
+  return { name, claudeOutput, copilotOutput, codexOutput };
 }
 
-const sharedBody = extractSection(rest, "## Comportamento Compartilhado", "## Particularidades Por Cliente");
-const particularitiesRaw = extractSection(rest, "## Particularidades Por Cliente", null);
-const clientBlocks = parseClientBlocks(particularitiesRaw);
+function targetsFor(sourcePath, rendered) {
+  const { name, claudeOutput, copilotOutput, codexOutput } = rendered;
 
-const claude = parseClientBlock(clientBlocks["Claude"]);
-const copilot = parseClientBlock(clientBlocks["Copilot"]);
-const codex = parseClientBlock(clientBlocks["Codex"]);
+  return [
+    { filePath: path.join(rootDir, ".claude/agents", `${name}.md`), content: claudeOutput },
+    { filePath: path.join(rootDir, ".github/agents", `${name}.agent.md`), content: copilotOutput },
+    { filePath: path.join(rootDir, ".codex/agents", `${name}.toml`), content: codexOutput },
+  ];
+}
 
-const claudeDescription = claude.description || defaultDescription;
-const claudeBody = composeBody(sharedBody, claude.extra);
-const claudeOutput = `---\nname: ${name}\ndescription: ${claudeDescription}\n---\n\n${claudeBody}\n`;
+function renderAgentFile(sourcePath) {
+  const raw = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
+  const rendered = renderFromSource(raw, sourcePath);
 
-const copilotDescription = copilot.description || defaultDescription;
-const copilotBody = composeBody(sharedBody, copilot.extra);
-const copilotOutput = `---\ndescription: "${copilotDescription}"\nname: ${name}\n---\n\n# ${name} instructions\n\n${copilotBody}\n`;
+  const expectedName = path.basename(sourcePath, ".md");
+  if (rendered.name !== expectedName) {
+    throw new Error(
+      `"name" (${rendered.name}) nao bate com o nome do arquivo ${sourcePath} (esperado "${expectedName}")`,
+    );
+  }
 
-const codexDescription = codex.description || defaultDescription;
-const codexBody = stripCodeFences(composeBody(sharedBody, codex.extra));
-const nicknames = codex.nicknameCandidates || [];
-const nicknameList = nicknames.map((item) => `"${item}"`).join(", ");
-const codexOutput = `name = "${name}"\ndescription = "${codexDescription}"\ndeveloper_instructions = """\n${codexBody}\n"""\nnickname_candidates = [${nicknameList}]\n`;
+  return targetsFor(sourcePath, rendered);
+}
 
-const targets = [
-  { clientLabel: "Claude", filePath: path.join(rootDir, ".claude/agents", `${name}.md`), content: claudeOutput },
-  { clientLabel: "Copilot", filePath: path.join(rootDir, ".github/agents", `${name}.agent.md`), content: copilotOutput },
-  { clientLabel: "Codex", filePath: path.join(rootDir, ".codex/agents", `${name}.toml`), content: codexOutput },
-];
-
-if (checkOnly) {
+function checkAgentFile(sourcePath) {
+  const targets = renderAgentFile(sourcePath);
   let hasDrift = false;
 
   for (const target of targets) {
@@ -158,15 +205,84 @@ if (checkOnly) {
   }
 
   if (hasDrift) {
-    console.error("Rode 'node scripts/render-agents.mjs " + sourcePath + "' para regenerar.");
+    console.error(`Rode 'node scripts/render-agents.mjs ${sourcePath}' para regenerar.`);
+  }
+
+  return !hasDrift;
+}
+
+function writeAgentFile(sourcePath) {
+  const targets = renderAgentFile(sourcePath);
+
+  for (const target of targets) {
+    fs.writeFileSync(target.filePath, target.content);
+    console.log(`Gerado: ${target.filePath}`);
+  }
+}
+
+function discoverAgentSources() {
+  const agentsDir = path.join(rootDir, "agents");
+
+  return fs
+    .readdirSync(agentsDir)
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => path.join("agents", file))
+    .sort();
+}
+
+function main() {
+  const [, , arg1, arg2] = process.argv;
+
+  if (arg1 === "--check-all") {
+    const sources = discoverAgentSources();
+
+    if (sources.length === 0) {
+      console.error("Nenhuma fonte encontrada em agents/*.md.");
+      process.exit(1);
+    }
+
+    let allOk = true;
+
+    for (const source of sources) {
+      if (!checkAgentFile(source)) {
+        allOk = false;
+      }
+    }
+
+    if (!allOk) {
+      process.exit(1);
+    }
+
+    console.log(`OK - ${sources.length} fonte(s) em agents/ equivalem aos arquivos gerados`);
+    return;
+  }
+
+  const sourcePath = arg1;
+  const checkOnly = arg2 === "--check";
+
+  if (!sourcePath) {
+    console.error("Uso: node scripts/render-agents.mjs <agents/<nome>.md> [--check]");
+    console.error("     node scripts/render-agents.mjs --check-all");
     process.exit(1);
   }
 
-  console.log(`OK - ${sourcePath} equivalente aos tres arquivos gerados`);
-  process.exit(0);
+  if (checkOnly) {
+    if (!checkAgentFile(sourcePath)) {
+      process.exit(1);
+    }
+
+    console.log(`OK - ${sourcePath} equivalente aos tres arquivos gerados`);
+    return;
+  }
+
+  writeAgentFile(sourcePath);
 }
 
-for (const target of targets) {
-  fs.writeFileSync(target.filePath, target.content);
-  console.log(`Gerado: ${target.filePath}`);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  try {
+    main();
+  } catch (error) {
+    console.error(`ERRO: ${error.message}`);
+    process.exit(1);
+  }
 }
