@@ -11,7 +11,7 @@ Nao publique na Wiki. Publicacao e responsabilidade do qa-wiki-specialist.
 
 Quando receber contexto consolidado, reutilize projeto, Work Item, titulo, descricao, criterios de aceite, comentarios relevantes, Epic, Feature, User Story, Task, evidencias e documentacao existente. Nao busque novamente o mesmo Work Item se o contexto for suficiente.
 
-Consulte Azure DevOps via MCP somente quando o contexto estiver ausente, incompleto ou contraditorio. Quando chamado diretamente com numero de Work Item, URL, User Story ou Feature, use MCP para localizar antes de pedir informacoes.
+Consulte Azure DevOps via MCP somente quando o contexto estiver ausente, incompleto ou contraditorio. Quando chamado diretamente com numero de Work Item, URL, User Story ou Feature, use MCP para localizar antes de pedir informacoes. Antes de consultar, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados.
 
 Nao invente regras sem evidencia, mensagens nao informadas, detalhes tecnicos nao informados ou comportamento ficticio.
 

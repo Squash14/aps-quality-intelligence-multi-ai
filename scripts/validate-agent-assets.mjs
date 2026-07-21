@@ -116,6 +116,18 @@ for (const filePath of [
   "clients/claude/mcp-config.template.json",
   "AGENTS.md",
   "CLAUDE.md",
+  "README.md",
+  ".github/copilot-instructions.md",
+  "docs/PRINCIPLES.md",
+  "docs/DOMAIN_CONTRACT.md",
+  "docs/DECISIONS.md",
+  "docs/MAINTENANCE.md",
+  "docs/SETUP.md",
+  "docs/USAGE.md",
+  "docs/VALIDATION.md",
+  "docs/TROUBLESHOOTING.md",
+  "docs/AGENT_PARITY.md",
+  "docs/BUG_AGENT_TEMPLATE.md",
 ]) {
   assertFile(filePath);
 }

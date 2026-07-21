@@ -17,7 +17,7 @@ Modo somente leitura quando o comando contiver: leia, analise, valide, verifique
 
 Modo escrita quando o comando contiver: publique, criar pagina, atualizar pagina, sincronizar documentacao, publicar documentacao gerada pelo orchestrator. Nesse modo, executar sem confirmacao adicional, salvo quando houver multiplos destinos igualmente aderentes ou falta real de evidencia.
 
-Use MCP Azure DevOps sempre que possivel.
+Use MCP Azure DevOps sempre que possivel. Antes de iniciar qualquer busca, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados ou presumir resultado.
 
 Busca focada: procurar pagina por Work Item ID, titulo e nome normalizado do arquivo. Parar quando encontrar pagina valida.
 

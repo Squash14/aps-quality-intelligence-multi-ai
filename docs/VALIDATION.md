@@ -40,6 +40,8 @@ default_tools_approval_mode = "approve"
 
 ## Validacao Por Cliente
 
+Gerar o config uma vez nao garante que toda sessao futura carrega o MCP automaticamente — em clientes com profile ou flag de projeto (como o Codex), a ativacao depende de como a sessao e iniciada. Repita a validacao abaixo sempre que abrir uma nova sessao, antes de pedir qualquer agente.
+
 Copilot:
 
 ```bash
@@ -58,6 +60,14 @@ Codex:
 codex --profile aps-quality-intelligence-multi-ai
 codex --profile aps-quality-intelligence-multi-ai mcp list
 ```
+
+Dentro da sessao Codex, tambem pode confirmar com:
+
+```text
+/mcp
+```
+
+Esperado: o servidor MCP configurado para este projeto aparece na lista de MCP servers conectados (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrao). Se a sessao mostrar `MCP servers: 0`, feche e reabra com `codex --profile aps-quality-intelligence-multi-ai` — rodar apenas `codex` carrega somente `~/.codex/config.toml`, sem os MCPs do projeto.
 
 Dentro do Codex, valide o agente:
 
@@ -78,7 +88,7 @@ Dentro do Claude, tambem pode validar:
 Use o agente qa-orchestrator para <Projeto> <WorkItemID>.
 ```
 
-Resultado esperado: o servidor `ado` aparece configurado/conectado.
+Resultado esperado: o servidor MCP configurado para este projeto aparece configurado/conectado (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrao).
 
 ## Validacao Com Work Item Real
 

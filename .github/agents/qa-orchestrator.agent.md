@@ -43,7 +43,7 @@ Assuma que:
 
 ## Coleta Azure DevOps
 
-Use MCP Azure DevOps sempre que possivel.
+Use MCP Azure DevOps sempre que possivel. Antes de iniciar a coleta, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados ou presumir resultado.
 
 Modo focado obrigatorio:
 

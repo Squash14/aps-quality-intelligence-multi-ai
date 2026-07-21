@@ -24,6 +24,7 @@ Componentes:
 
 | Area | Responsabilidade |
 | --- | --- |
+| `agents/` | Fonte canonica de agentes ja migrados (ver "Agentes" abaixo). Renderiza para os tres clientes via `scripts/render-agents.mjs`. |
 | `clients/copilot/` | Template MCP do Copilot. |
 | `clients/codex/` | Template de profile MCP do Codex. |
 | `clients/claude/` | Template MCP do Claude Code. |
@@ -59,8 +60,26 @@ Saida esperada:
 | Cliente | Config versionado | Config gerado | Observacao |
 | --- | --- | --- | --- |
 | Copilot | `clients/copilot/mcp-config.template.json` | `~/.copilot/mcp-config.json` | Continua usando `.github/agents`. |
-| Codex | `clients/codex/config.template.toml` | `~/.codex/aps-quality-intelligence-multi-ai.config.toml` | Use com `codex --profile aps-quality-intelligence-multi-ai`; agentes ficam em `.codex/agents`; MCP `ado` usa `default_tools_approval_mode = "approve"`. |
+| Codex | `clients/codex/config.template.toml` | `~/.codex/aps-quality-intelligence-multi-ai.config.toml` | Use com `codex --profile aps-quality-intelligence-multi-ai`; agentes ficam em `.codex/agents`; o servidor MCP configurado (`MCP_SERVER_NAME`, `ado` por padrao) usa `default_tools_approval_mode = "approve"`. |
 | Claude | `clients/claude/mcp-config.template.json` | `.mcp.json` | Use com `claude --mcp-config .mcp.json`; agentes ficam em `.claude/agents`. |
+
+### Ativacao De MCP: Config Global Vs Config Por Profile
+
+Cada cliente carrega MCP de uma destas duas formas: um arquivo de config global, lido automaticamente ao iniciar o cliente sem flags, ou um arquivo/profile especifico do projeto, que so e carregado quando o usuario passa a flag correspondente.
+
+| Cliente | Comportamento padrao (sem flags) | Como ativar o MCP deste projeto |
+| --- | --- | --- |
+| Copilot | Le `~/.copilot/mcp-config.json` automaticamente. | Nenhuma flag adicional; o setup escreve direto no arquivo global. |
+| Codex | Le apenas `~/.codex/config.toml`. Nao carrega profiles nomeados automaticamente. | `codex --profile aps-quality-intelligence-multi-ai`. |
+| Claude | Nao carrega MCP de projeto sem flag. | `claude --mcp-config .mcp.json`. |
+
+Essa licao vem de uma validacao real: iniciar `codex` sem `--profile` carrega `~/.codex/config.toml` (0 MCP do projeto) silenciosamente — sem erro, sem aviso — dando a falsa impressao de que os agentes ou o framework estavam com problema, quando o unico problema era a forma de inicializar o cliente.
+
+Se um adaptador de cliente futuro (novo cliente de IA) usar o mesmo padrao de config por profile/flag do Codex ou do Claude, a documentacao operacional desse cliente (README, SETUP, VALIDATION) deve deixar explicito:
+
+* que existe uma config global carregada por padrao, distinta da config do projeto;
+* qual flag ou comando ativa a config do projeto;
+* como confirmar, dentro da propria sessao do cliente, que o MCP do projeto foi carregado antes de usar qualquer agente.
 
 ## Agentes
 
@@ -81,13 +100,28 @@ Regras de fronteira:
 
 ## Manutencao
 
-Antes de alterar agentes:
+Existem hoje **dois fluxos validos** para alterar um agente, dependendo se ele ja tem fonte canonica em `agents/`. Confirme qual fluxo se aplica antes de editar qualquer arquivo — editar o arquivo errado gera `DRIFT` no `check.sh`/CI ou, pior, uma divergencia silenciosa entre clientes que nenhum check hoje cobre.
 
-1. Leia o arquivo do agente afetado.
-2. Atualize os tres formatos: `.github/agents`, `.codex/agents` e `.claude/agents`.
-3. Preserve o formato publico de entrada.
-4. Execute `./scripts/check.sh` para validar paridade de agentes.
+### Agente com fonte canonica (`agents/<nome>.md` existe)
+
+Hoje: `qa-bug-specialist`, `qa-wiki-specialist`.
+
+1. Edite apenas `agents/<nome>.md` (secoes `## Comportamento Compartilhado` e `## Particularidades Por Cliente`).
+2. Rode `node scripts/render-agents.mjs agents/<nome>.md` para regenerar `.claude/agents/`, `.codex/agents/` e `.github/agents/`.
+3. Nunca edite os tres arquivos gerados diretamente — a proxima regeneracao sobrescreve qualquer edicao manual sem aviso.
+4. Execute `./scripts/check.sh` (valida, entre outras coisas, que os gerados batem com a fonte via `render-agents.mjs --check-all`).
 5. Valide com um Work Item real antes de compartilhar com o time.
+
+### Agente ainda sem fonte canonica (`agents/<nome>.md` nao existe)
+
+Hoje: `qa-orchestrator`, `qa-bdd-specialist`. Esses dois agentes ja divergiram de forma real entre clientes porque dependem inteiramente de disciplina manual — ver `docs/AGENT_PARITY.md` para o estado atual dessa divergencia.
+
+1. Leia o arquivo do agente afetado nos tres clientes antes de editar, para entender se ja existe divergencia previa.
+2. Atualize os tres formatos manualmente: `.github/agents`, `.codex/agents` e `.claude/agents`, com o mesmo comportamento funcional.
+3. Preserve o formato publico de entrada.
+4. Execute `./scripts/check.sh` — hoje ele so confirma presenca de arquivo e de conceitos-chave (`scripts/validate-agent-assets.mjs`), **nao** equivalencia semantica completa entre os tres arquivos. Passar no check nao garante paridade real para esses dois agentes.
+5. Valide com um Work Item real em pelo menos dois clientes antes de compartilhar com o time.
+6. Ao terminar, considere migrar o agente para fonte canonica (`agents/<nome>.md`) seguindo o padrao de `qa-bug-specialist`/`qa-wiki-specialist`, para que o proximo check cubra esse agente por completo.
 
 No Windows, use tambem:
 
@@ -95,7 +129,7 @@ No Windows, use tambem:
 .\scripts\check.ps1
 ```
 
-O check de agentes valida existencia dos tres formatos e conceitos obrigatorios por agente. Ele nao substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
+Ambos os checks rodam automaticamente em `push`/`pull_request` via `.github/workflows/check.yml` (ver `docs/DECISIONS.md`, DEC-0002). Isso reduz — mas nao elimina — a chance de divergencia passar despercebida: para agentes sem fonte canonica, o CI so pega ausencia de arquivo ou de conceito-chave, nao diferenca de comportamento linha a linha. Nenhum dos dois checks substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
 
 Antes de alterar scripts de setup:
 
@@ -121,6 +155,8 @@ Checklist de PR:
 * Nomes dos agentes batem com os arquivos em `.github/agents/`.
 * Agentes equivalentes existem em `.codex/agents/` e `.claude/agents/`.
 * Conceitos obrigatorios dos agentes passam em `scripts/validate-agent-assets.mjs`.
+* Se o agente tem fonte canonica em `agents/`, ela foi editada e `node scripts/render-agents.mjs agents/<nome>.md` foi rodado (nunca editar os tres gerados direto).
+* Se o agente ainda nao tem fonte canonica, os tres arquivos foram revisados lado a lado para o mesmo comportamento — o check automatizado nao garante isso para esses agentes.
 * Scripts de setup e validacao continuam alinhados com os docs.
 * Um fluxo com Work Item real foi verificado quando houve mudanca de comportamento dos agentes.
 

@@ -151,3 +151,29 @@ Consequencias:
 
 Principios relacionados:
 Principio 2 (Evolucao Incremental), Principio 7 (Sustentabilidade De Longo Prazo), Principio 9 (Principio Da Evidencia).
+
+### DEC-0002 - Adocao de GitHub Actions para rodar `scripts/check.sh` e `scripts/check.ps1` automaticamente
+
+* Data: 2026-07-20
+* Status: Ativa
+
+Contexto:
+Uma revisao arquitetural do framework identificou que `./scripts/check.sh` (sintaxe dos scripts, renderizacao MCP, paridade de agentes) so era executado manualmente, quando um mantenedor lembrava de rodar. Isso permitiu que dois agentes (`qa-orchestrator` e `qa-bdd-specialist`, ainda mantidos manualmente nos tres formatos por nao terem fonte canonica em `agents/`) divergissem de forma real e ja observavel entre Copilot e os demais clientes, sem que nenhuma validacao acusasse o problema — o check existente so cobre os agentes que ja tem fonte canonica. Nao havia, ate esta decisao, nenhum workflow em `.github/workflows/`.
+
+Decisao:
+Adicionar `.github/workflows/check.yml`, rodando em `push` e `pull_request`, com dois jobs: um em `ubuntu-latest` executando `./scripts/check.sh`, outro em `windows-latest` executando `.\scripts\check.ps1`. Nenhum dos dois scripts depende de `.env` ou de segredo, entao o workflow roda sem configurar PAT ou Azure DevOps.
+
+Justificativa / Evidencia:
+Decisao de processo/ferramental, nao ha PoC aplicavel alem do proprio funcionamento do workflow. A motivacao e risco observado: a paridade entre clientes (Principio 3) so estava sendo validada quando um humano lembrava de rodar o check localmente, e apenas para os agentes ja migrados para fonte canonica. Automatizar a execucao em CI aplica o Principio 6 (Documentacao Viva: "validacao automatizada e preferida a confianca manual sempre que for viavel") ao proprio processo de manutencao dos agentes, sem alterar o contrato funcional do framework nem o comportamento observado pelo usuario final.
+
+Alternativas consideradas:
+* Manter o check apenas manual/local — descartado: e exatamente a lacuna que permitiu a divergencia ja observada entre clientes passar despercebida.
+* Rodar `check.ps1` tambem via emulacao em `ubuntu-latest` — descartado: `windows-latest` ja esta disponivel nativamente no GitHub Actions e valida o comportamento real do PowerShell, sem necessidade de camada de compatibilidade.
+
+Consequencias:
+* Toda mudanca em agentes, scripts ou templates MCP passa a ser validada automaticamente em `push` e `pull_request`, nos dois sistemas operacionais suportados.
+* Isso nao substitui validacao com Work Item real (`docs/VALIDATION.md`) quando houver mudanca de comportamento.
+* Fechar a divergencia ja existente entre `qa-orchestrator`/`qa-bdd-specialist` nos tres clientes continua pendente como melhoria separada (ver `docs/AGENT_PARITY.md`), pois exige decidir qual comportamento e o correto antes de regenerar os arquivos — nao e coberto por esta decisao.
+
+Principios relacionados:
+Principio 3 (Agnosticismo De IA), Principio 6 (Documentacao Viva), Principio 7 (Sustentabilidade De Longo Prazo).

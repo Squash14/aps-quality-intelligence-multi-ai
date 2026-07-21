@@ -39,7 +39,7 @@ Nao busque novamente o mesmo Work Item se o contexto consolidado for suficiente.
 
 Consulte Azure DevOps via MCP somente quando o contexto recebido estiver ausente, incompleto ou contraditorio.
 
-Quando chamado diretamente pelo usuario com numero de Work Item, URL, User Story ou Feature, use MCP para localizar o item antes de pedir informacoes adicionais.
+Quando chamado diretamente pelo usuario com numero de Work Item, URL, User Story ou Feature, use MCP para localizar o item antes de pedir informacoes adicionais. Antes de consultar, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados.
 
 ## Validacao De Suficiencia
 

@@ -1,5 +1,11 @@
 # Uso
 
+## Antes De Comecar
+
+Todo agente deste framework depende do MCP Azure DevOps para localizar Work Item, consultar Wiki e demais recursos. Antes de pedir qualquer agente, confirme que esse MCP esta carregado na sessao atual do cliente escolhido — veja `docs/SETUP.md`, secao "Validar Ativacao Do MCP".
+
+Um agente chamado sem o MCP Azure DevOps disponivel nao encontra Work Item nem Wiki. O sintoma parece um bug do agente ou do framework, mas a causa costuma ser a sessao do cliente sem o MCP carregado (por exemplo, Codex iniciado sem `--profile`).
+
 ## Fluxo Principal
 
 Entrada publica:

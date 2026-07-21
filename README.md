@@ -106,6 +106,8 @@ Use `all` somente se os três clientes estiverem instalados. Para testar agora, 
 
 Use este roteiro se você escolheu Codex.
 
+> **Importante:** rodar apenas `codex` carrega somente `~/.codex/config.toml`. O MCP deste projeto fica em um profile nomeado (`~/.codex/aps-quality-intelligence-multi-ai.config.toml`) e só é carregado quando você inicia com `--profile aps-quality-intelligence-multi-ai`. Sem esse profile, a sessão mostra `MCP servers: 0` e nenhum agente deste projeto consegue consultar Azure DevOps. Isso não é uma falha do framework nem dos agentes — é o comportamento padrão do Codex CLI para profiles de projeto. Sempre inicie com o comando abaixo.
+
 ### macOS
 
 ```bash
@@ -122,7 +124,7 @@ codex --profile aps-quality-intelligence-multi-ai
 codex --profile aps-quality-intelligence-multi-ai
 ```
 
-O setup do Codex gera o profile com `default_tools_approval_mode = "approve"` para o servidor MCP `ado`. Isso evita perguntas repetidas para cada chamada Azure DevOps, como `wit_get_work_item`, `wit_get_work_items_batch_by_ids`, `wiki_list_wikis` e `search_wiki`.
+O setup do Codex gera o profile com `default_tools_approval_mode = "approve"` para o servidor MCP configurado (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrão neste projeto). Isso evita perguntas repetidas para cada chamada Azure DevOps, como `wit_get_work_item`, `wit_get_work_items_batch_by_ids`, `wiki_list_wikis` e `search_wiki`.
 
 Se você já tinha gerado o profile antes desta configuração, rode novamente:
 
@@ -180,13 +182,19 @@ Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLAT
 
 Template completo: [docs/BUG_AGENT_TEMPLATE.md](docs/BUG_AGENT_TEMPLATE.md).
 
-Validar MCP no Codex:
+Validar MCP no Codex, antes de pedir qualquer agente:
 
 ```bash
 codex --profile aps-quality-intelligence-multi-ai mcp list
 ```
 
-Esperado: o servidor `ado` aparece configurado.
+Ou, dentro de uma sessão Codex já aberta:
+
+```text
+/mcp
+```
+
+Esperado em ambos: o servidor MCP configurado para este projeto aparece na lista (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrão). Se ele não aparecer, ou se a sessão mostrar `MCP servers: 0`, feche o Codex e reabra com `codex --profile aps-quality-intelligence-multi-ai` antes de usar qualquer agente.
 
 ## Roteiro Copilot
 
@@ -306,7 +314,7 @@ Validar MCP no Claude:
 claude --mcp-config .mcp.json mcp list
 ```
 
-Esperado: o servidor `ado` aparece configurado/conectado.
+Esperado: o servidor MCP configurado para este projeto aparece configurado/conectado (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrão).
 
 ## Skills E Comandos Úteis
 
@@ -347,6 +355,18 @@ No Codex e no Claude, prefira pedir o agente explicitamente em portugues:
 ```text
 Use o agente qa-orchestrator para Backoffice 11234.
 ```
+
+## Antes De Usar Qualquer Agente
+
+Todo agente deste framework depende do Azure DevOps para localizar Work Item, consultar Wiki e demais recursos. Antes de pedir qualquer agente, confirme que o servidor MCP configurado para este projeto (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrão) está carregado na sessão do cliente escolhido:
+
+| Cliente | Como validar dentro da sessão |
+| --- | --- |
+| Codex | `/mcp` |
+| Copilot | `/mcp show <nome do MCP>` (use `ado`, salvo se você alterou `MCP_SERVER_NAME`) |
+| Claude | `claude --mcp-config .mcp.json mcp list` (fora da sessão) |
+
+Se o servidor não aparecer, não peça o agente ainda. Revise a seção de setup do cliente escolhido primeiro — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
 
 ## Resultado Final Esperado
 
@@ -423,13 +443,16 @@ aps-quality-intelligence-multi-ai/
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── .env.example
+├── agents/
+│   └── (fonte canonica de agentes ja migrados; ver docs/AGENT_PARITY.md)
 ├── clients/
 │   ├── copilot/
 │   ├── codex/
 │   └── claude/
 ├── .github/
 │   ├── copilot-instructions.md
-│   └── agents/
+│   ├── agents/
+│   └── workflows/
 ├── .codex/
 │   └── agents/
 ├── .claude/
@@ -462,10 +485,12 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 | `PAT ainda está com valor de exemplo` | Edite `.env`, troque `AZURE_DEVOPS_PAT` e rode setup novamente. |
 | `npx não encontrado` | Instale Node.js/npm e abra um novo terminal. |
 | Cliente não encontrado | Instale Copilot CLI, Codex CLI ou Claude Code conforme o alvo escolhido. |
-| `ado` não aparece no MCP | Rode setup e validate novamente para o mesmo cliente. |
+| Servidor MCP do projeto não aparece na sessão | Rode setup e validate novamente para o mesmo cliente. |
 | Agente não encontrado | Confirme que está na raiz do projeto e reinicie o cliente. |
 | Você escolheu Codex mas abriu Copilot | Feche o cliente errado e siga apenas o roteiro Codex. |
 | Codex mostra `Unrecognized command '/allow-all'` | Normal no Codex CLI. Use flags de inicializacao como `--sandbox workspace-write --ask-for-approval on-request` ou `--dangerously-bypass-approvals-and-sandbox`. |
+| Codex mostra `MCP servers: 0` | Você iniciou `codex` sem `--profile aps-quality-intelligence-multi-ai`. Sem esse profile, o Codex carrega somente `~/.codex/config.toml` e nenhum MCP do projeto. Feche a sessão e inicie com `codex --profile aps-quality-intelligence-multi-ai`. |
+| Agente não encontra Work Item, Wiki ou qualquer dado mesmo com setup correto | Confirme que o MCP Azure DevOps está carregado na sessão atual (`/mcp` no Codex, `/mcp show <nome do MCP>` no Copilot, `claude mcp list` no Claude) antes de repetir o pedido. Veja [Antes De Usar Qualquer Agente](#antes-de-usar-qualquer-agente). |
 
 ## Documentação Complementar
 

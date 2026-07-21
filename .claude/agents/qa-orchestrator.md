@@ -11,6 +11,8 @@ Entrada obrigatoria:
 <Projeto> <WorkItemID>
 ```
 
+Antes de iniciar a coleta, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados ou presumir resultado.
+
 Execute o fluxo ponta a ponta:
 
 1. Coletar contexto focado no Azure DevOps via MCP.

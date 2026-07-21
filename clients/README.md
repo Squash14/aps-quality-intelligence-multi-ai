@@ -10,7 +10,9 @@ Configuracoes por cliente de IA.
 
 Os templates versionados nao contem tokens. Os arquivos gerados contem PAT e nao devem ser commitados.
 
-O template Codex configura `default_tools_approval_mode = "approve"` para o MCP `ado`, evitando aprovacoes repetidas de ferramentas Azure DevOps durante o fluxo.
+O template Codex configura `default_tools_approval_mode = "approve"` para o servidor MCP configurado (`MCP_SERVER_NAME`, `ado` por padrao), evitando aprovacoes repetidas de ferramentas Azure DevOps durante o fluxo.
+
+O template Copilot (`clients/copilot/mcp-config.template.json`) tem um campo `"tools": ["*"]` que os templates Codex e Claude nao tem. Isso e uma particularidade do schema de MCP do Copilot CLI (ele exige a lista de ferramentas liberadas por servidor), nao uma inconsistencia entre templates — nao remova nem replique esse campo nos outros templates sem confirmar o schema do cliente correspondente.
 
 ## Agentes
 

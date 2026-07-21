@@ -89,3 +89,35 @@ node scripts/test-render-mcp-config.mjs
 ```
 
 O teste usa arquivos temporarios e nao le o `.env` real.
+
+## Render De Agentes
+
+`render-agents.mjs` gera os tres arquivos de cliente (`.claude/agents/<nome>.md`, `.codex/agents/<nome>.toml`, `.github/agents/<nome>.agent.md`) a partir de uma fonte canonica unica em `agents/<nome>.md`. Nem todo agente tem fonte canonica hoje — ver `docs/AGENT_PARITY.md` para o estado atual de cada agente.
+
+Regenerar um agente com fonte canonica:
+
+```bash
+node scripts/render-agents.mjs agents/<nome>.md
+```
+
+Checar se os arquivos gerados ja estao em dia, sem sobrescrever nada:
+
+```bash
+node scripts/render-agents.mjs agents/<nome>.md --check
+```
+
+Checar todos os agentes com fonte canonica de uma vez (e o que `./scripts/check.sh` roda):
+
+```bash
+node scripts/render-agents.mjs --check-all
+```
+
+A fonte (`agents/<nome>.md`) usa frontmatter (`name`, `description`) seguido de `## Comportamento Compartilhado` (conteudo comum aos tres clientes) e `## Particularidades Por Cliente`, com sub-secoes `### Codex`, `### Copilot` e `### Claude` para descricao alternativa e conteudo extra especifico de cada cliente. Nunca edite os tres arquivos gerados diretamente: a proxima regeneracao sobrescreve qualquer edicao manual sem aviso.
+
+## Teste Do Render De Agentes
+
+```bash
+node scripts/test-render-agents.mjs
+```
+
+O teste usa fixtures em memoria e nao le `agents/*.md` reais.

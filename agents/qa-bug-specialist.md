@@ -29,7 +29,7 @@ Entrada recomendada:
 * causa do problema;
 * direcionar para: nome da pessoa.
 
-Use MCP Azure DevOps sempre que possivel.
+Use MCP Azure DevOps sempre que possivel. Antes de iniciar qualquer busca, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados ou presumir resultado.
 
 Antes de criar Bug:
 
