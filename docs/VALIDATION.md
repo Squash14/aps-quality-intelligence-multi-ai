@@ -42,6 +42,8 @@ default_tools_approval_mode = "approve"
 
 Gerar o config uma vez nao garante que toda sessao futura carrega o MCP automaticamente — em clientes com profile ou flag de projeto (como o Codex), a ativacao depende de como a sessao e iniciada. Repita a validacao abaixo sempre que abrir uma nova sessao, antes de pedir qualquer agente.
 
+Alem de carregar o config, a conexao e a autenticacao do MCP tambem sao caracteristicas da sessao atual, nao do config gerado. Uma nova sessao pode exibir o MCP como desconectado ou pendente de autenticacao mesmo com o config correto e ja validado antes — isso nao indica setup quebrado. Nesse caso, use o comando de validacao/reconexao do proprio cliente (por exemplo, o comando de listagem ou status de MCP da sessao) para reconectar ou reautenticar antes de pedir qualquer agente.
+
 Copilot:
 
 ```bash

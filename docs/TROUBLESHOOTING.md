@@ -15,5 +15,6 @@
 | Arquivo ficou em `output/` | Isso e esperado quando a publicacao falha; mova para `output/delete/` somente apos publicacao bem-sucedida. |
 | Codex mostra `MCP servers: 0` | Voce iniciou `codex` sem `--profile aps-quality-intelligence-multi-ai`. Sem esse profile, o Codex carrega somente `~/.codex/config.toml`, sem os MCPs do projeto. Feche a sessao e inicie com `codex --profile aps-quality-intelligence-multi-ai`. |
 | Agente nao encontra Work Item, Wiki ou qualquer dado mesmo com setup correto | Confirme que o MCP Azure DevOps esta carregado na sessao atual (`/mcp` no Codex, `/mcp show <nome do MCP>` no Copilot, `claude mcp list` no Claude) antes de repetir o pedido. O agente e o framework podem estar corretos; a sessao do cliente e que nao carregou o MCP. |
+| Nova sessao mostra aviso de autenticacao ou conexao MCP pendente, mesmo com setup ja validado antes | Isso e esperado: a conexao e a autenticacao do MCP valem para a sessao atual do cliente, nao para o config gerado em disco. Use o comando de MCP do proprio cliente para reconectar ou reautenticar antes de pedir qualquer agente; nao e necessario rodar `setup-mcp` novamente. |
 
 Nunca cole PAT, `.env`, `.mcp.json` ou config MCP gerado em mensagens publicas.

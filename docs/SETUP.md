@@ -73,6 +73,8 @@ Gerar o config nao garante que o cliente carrega o MCP automaticamente. Antes de
 
 No Codex, rodar apenas `codex` (sem `--profile`) carrega somente `~/.codex/config.toml` e resulta em `MCP servers: 0`. Isso nao e uma falha do setup nem do framework — e o comportamento padrao do Codex CLI quando nenhum profile e informado. Sempre inicie com `--profile aps-quality-intelligence-multi-ai`.
 
+Independente do cliente, a conexao e a autenticacao do MCP valem para a sessao atual, nao para o config gerado em disco. Ao abrir uma nova sessao, o cliente pode indicar o MCP como desconectado ou pendente de autenticacao mesmo que o setup ja tenha sido validado antes. Isso e esperado — reconecte ou reautentique usando o comando de MCP do proprio cliente antes de pedir qualquer agente, em vez de rodar `setup-mcp` novamente.
+
 ## Check De Manutencao
 
 macOS:

@@ -368,6 +368,8 @@ Todo agente deste framework depende do Azure DevOps para localizar Work Item, co
 
 Se o servidor não aparecer, não peça o agente ainda. Revise a seção de setup do cliente escolhido primeiro — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
 
+Independente do cliente, a conexão e a autenticação do MCP valem para a sessão atual, não para o config gerado em disco. Uma nova sessão pode indicar o MCP como desconectado ou pendente de autenticação mesmo com o setup já validado antes — isso não é uma falha de configuração. Nesse caso, reconecte ou reautentique usando o comando de MCP do próprio cliente antes de pedir qualquer agente, em vez de rodar `setup-mcp` novamente.
+
 ## Resultado Final Esperado
 
 O `qa-orchestrator` deve responder neste formato:
@@ -491,6 +493,7 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 | Codex mostra `Unrecognized command '/allow-all'` | Normal no Codex CLI. Use flags de inicializacao como `--sandbox workspace-write --ask-for-approval on-request` ou `--dangerously-bypass-approvals-and-sandbox`. |
 | Codex mostra `MCP servers: 0` | Você iniciou `codex` sem `--profile aps-quality-intelligence-multi-ai`. Sem esse profile, o Codex carrega somente `~/.codex/config.toml` e nenhum MCP do projeto. Feche a sessão e inicie com `codex --profile aps-quality-intelligence-multi-ai`. |
 | Agente não encontra Work Item, Wiki ou qualquer dado mesmo com setup correto | Confirme que o MCP Azure DevOps está carregado na sessão atual (`/mcp` no Codex, `/mcp show <nome do MCP>` no Copilot, `claude mcp list` no Claude) antes de repetir o pedido. Veja [Antes De Usar Qualquer Agente](#antes-de-usar-qualquer-agente). |
+| Nova sessão mostra aviso de autenticação ou conexão MCP pendente, mesmo com setup já validado antes | Isso é esperado: a conexão e a autenticação do MCP valem para a sessão atual do cliente, não para o config gerado em disco. Use o comando de MCP do próprio cliente para reconectar ou reautenticar antes de pedir qualquer agente; não é necessário rodar `setup-mcp` novamente. |
 
 ## Documentação Complementar
 
