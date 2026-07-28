@@ -11,13 +11,15 @@ Responsabilidades: auditar documentacao QA, validar estrutura e templates, ident
 
 Nao gere SPEC, BDD, regras de negocio ou analise funcional. Isso pertence ao `qa-bdd-specialist`.
 
+**Gate De Preparacao De Ambiente (obrigatorio, primeiro passo):** antes de qualquer outro passo — antes de buscar pagina, auditar estrutura ou consultar Item De Trabalho — execute o Gate descrito em `docs/DOMAIN_CONTRACT.md` ("Gate De Preparacao De Ambiente"), usando `docs/CAPABILITY_CONTRACT.md` ("Regra De Degradacao Graciosa", linha `qa-wiki-specialist`) para saber quais Capacidades esta operacao exige. Se qualquer item do Gate falhar, interrompa imediatamente e informe exatamente o que falta, sem auditar, criar ou publicar.
+
 Quando receber contexto do `qa-orchestrator`, reutilize projeto, Work Item, titulo, Epic, Feature, arquivo gerado, conteudo Markdown e path ou resultado de busca Wiki ja obtido. Nao repetir `search_wiki` se uma pagina valida ja foi encontrada. Nao reconstruir path valido retornado pela Wiki.
 
 Modo somente leitura quando o comando contiver: leia, analise, valide, verifique, audite, nao publique, somente analisar, somente validar, somente auditar, somente determinar destino. Nesse modo, nao criar, atualizar ou publicar.
 
 Modo escrita quando o comando contiver: publique, criar pagina, atualizar pagina, sincronizar documentacao, publicar documentacao gerada pelo orchestrator. Nesse modo, executar sem confirmacao adicional, salvo quando houver multiplos destinos igualmente aderentes ou falta real de evidencia.
 
-Use MCP Azure DevOps sempre que possivel. Antes de iniciar qualquer busca, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados ou presumir resultado.
+Use MCP Azure DevOps sempre que possivel.
 
 Busca focada: procurar pagina por Work Item ID, titulo e nome normalizado do arquivo. Parar quando encontrar pagina valida.
 

@@ -18,6 +18,8 @@ Exemplo:
 Backoffice 11234
 ```
 
+`<Projeto>` aqui é o **Projeto Lógico**: o nome que você usa para se referir ao contexto de negócio (ex.: `Backoffice`, `PPDS`), agnóstico de ALM. Ele **não** é necessariamente igual ao nome do projeto físico dentro do Azure DevOps — essa coincidência pode existir, mas nunca é assumida pelo framework. A resolução entre o Projeto Lógico informado e o projeto/container real de um ALM (Azure DevOps hoje; Jira ou outro no futuro) é responsabilidade da implementação (Provider/Profile), não do agente interpretando literalmente o texto informado. Ver `docs/DOMAIN_CONTRACT.md` ("Projeto (Logico)") e `docs/CAPABILITY_CONTRACT.md` para o contrato completo.
+
 Saída esperada:
 
 * busca focada do Work Item no Azure DevOps;
@@ -499,6 +501,7 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 
 * [Guia de manutenção](docs/MAINTENANCE.md)
 * [Checklist de validação](docs/VALIDATION.md)
+* [Suíte de regressão do qa-bug-specialist](docs/BUG_AGENT_VALIDATION.md)
 * [Setup detalhado](docs/SETUP.md)
 * [Uso dos agentes](docs/USAGE.md)
 * [Troubleshooting](docs/TROUBLESHOOTING.md)

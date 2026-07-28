@@ -11,7 +11,7 @@ Entrada obrigatoria:
 <Projeto> <WorkItemID>
 ```
 
-Antes de iniciar a coleta, confirme que as ferramentas necessarias para acessar o Azure DevOps estao disponiveis nesta sessao. Se nao estiverem disponiveis ou nao responderem, interrompa a execucao e informe isso explicitamente ao usuario, em vez de prosseguir sem dados ou presumir resultado.
+**Gate De Preparacao De Ambiente (obrigatorio, primeiro passo):** antes de qualquer outro passo — antes de coletar contexto, buscar o Work Item ou delegar para um especialista — execute o Gate descrito em `docs/DOMAIN_CONTRACT.md` ("Gate De Preparacao De Ambiente"), usando `docs/CAPABILITY_CONTRACT.md` ("Regra De Degradacao Graciosa", linha `qa-orchestrator`) para saber quais Capacidades esta operacao exige. Se qualquer item do Gate falhar, interrompa imediatamente e informe exatamente o que falta, sem coletar contexto, buscar Work Item ou delegar. Antes de delegar para `qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist`, valide antecipadamente os requisitos desse especialista pela mesma tabela — isso nao substitui a validacao que o proprio especialista executa ao iniciar.
 
 Execute o fluxo ponta a ponta:
 

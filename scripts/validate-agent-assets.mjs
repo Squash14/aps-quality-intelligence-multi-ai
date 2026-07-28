@@ -19,6 +19,7 @@ const semanticRequirements = {
     "qa-bdd-specialist",
     "qa-wiki-specialist",
     "PAT",
+    "Gate De Preparacao De Ambiente",
   ],
   "qa-bdd-specialist": [
     "SPEC",
@@ -28,6 +29,7 @@ const semanticRequirements = {
     "Nao publique na Wiki",
     "output/",
     "nao invent",
+    "Gate De Preparacao De Ambiente",
   ],
   "qa-wiki-specialist": [
     "Wiki",
@@ -37,15 +39,19 @@ const semanticRequirements = {
     "publicar",
     "path",
     "URL",
+    "Gate De Preparacao De Ambiente",
   ],
   "qa-bug-specialist": [
-    "Bug em produção",
-    "Erros de Codificação",
-    "Custom.Causadoproblema",
+    "Tipo Do Defeito",
+    "Profile ativo",
+    "Item De Trabalho Relacionado",
     "Assigned To",
+    "Gate De Preparacao De Ambiente",
     "parent",
     "duplicidade",
     "Evidencias: Nao informado",
+    "acoes_por_evento",
+    "Acoes Pos-Criacao",
   ],
 };
 
@@ -128,8 +134,54 @@ for (const filePath of [
   "docs/TROUBLESHOOTING.md",
   "docs/AGENT_PARITY.md",
   "docs/BUG_AGENT_TEMPLATE.md",
+  "profiles/apsen-arquitetura/profile.json",
 ]) {
   assertFile(filePath);
 }
 
+// Regression guard for DEC-0006/DEC-0007: the Gate De Preparacao De Ambiente has a
+// single specification in docs/DOMAIN_CONTRACT.md; every agent only references it.
+// Checking behavior here (not per-agent) is what actually protects the contract.
+const domainContractPath = "docs/DOMAIN_CONTRACT.md";
+const domainContract = read(domainContractPath);
+const gateContractRequirements = [
+  // Falha bloqueia o pedido original: nenhum Item De Trabalho, nenhuma
+  // documentacao funcional gerada, nenhum especialista/delegacao segue em frente.
+  "nao consulta o Item De Trabalho",
+  "nao inicia analise",
+  "nao gera Documento",
+  "nao delega para outro Agente",
+  "interrompe imediatamente",
+  // O diagnostico identifica causa e orienta a correcao com base nos docs do proprio framework.
+  "identifica exatamente qual item do Gate falhou e a causa",
+  "docs/SETUP.md",
+  "docs/TROUBLESHOOTING.md",
+  // O Gate exige identificar o Cliente De IA, e o diagnostico depende dessa
+  // identificacao para direcionar a orientacao a esse Cliente especifico.
+  "o Cliente De IA em uso esta identificado",
+  "identifica qual Cliente De IA esta em uso nesta sessao",
+  // Apos corrigir, o usuario repete o mesmo pedido, sem reformular.
+  "repetir exatamente o mesmo pedido original",
+];
+
+for (const expected of gateContractRequirements) {
+  assertSemanticIncludes(domainContract, expected, domainContractPath);
+}
+
+for (const agent of expectedAgents) {
+  for (const [clientPath, content] of [
+    [`.github/agents/${agent}.agent.md`, read(`.github/agents/${agent}.agent.md`)],
+    [`.codex/agents/${agent}.toml`, read(`.codex/agents/${agent}.toml`)],
+    [`.claude/agents/${agent}.md`, read(`.claude/agents/${agent}.md`)],
+  ]) {
+    assertSemanticIncludes(
+      content,
+      "Gate De Preparacao De Ambiente",
+      clientPath,
+    );
+    assertSemanticIncludes(content, "docs/DOMAIN_CONTRACT.md", clientPath);
+  }
+}
+
 console.log("OK - agent assets cover Copilot, Codex, and Claude");
+console.log("OK - Gate De Preparacao De Ambiente contract intact in docs/DOMAIN_CONTRACT.md");

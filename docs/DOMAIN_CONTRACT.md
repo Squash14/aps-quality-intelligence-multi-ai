@@ -12,15 +12,15 @@ Qualquer implementacao futura (qualquer sistema de ALM, qualquer cliente de IA) 
 
 ## Conceitos De Dominio
 
-### Projeto
+### Projeto (Logico)
 
-**Objetivo:** delimitar o contexto organizacional dentro do qual um Item De Trabalho existe.
+**Objetivo:** delimitar o contexto organizacional dentro do qual um Item De Trabalho existe, a partir do identificador informado pelo usuario — nunca do identificador interno de um Sistema ALM especifico.
 
 **Responsabilidades:** definir a fronteira de busca e a fronteira de publicacao de um Documento.
 
-**O que nao faz:** nao define regras funcionais dos Documentos gerados dentro dele.
+**O que nao faz:** nao define regras funcionais dos Documentos gerados dentro dele; nao pressupoe que seu identificador e igual ao identificador do projeto ou container fisico usado por um Sistema ALM concreto (ex.: nome de projeto no Azure DevOps, projeto ou site no Jira) — essa coincidencia pode existir na pratica, mas nunca e assumida por este contrato.
 
-**Relacoes:** contem um ou mais Item De Trabalho; delimita onde a Publicacao ocorre dentro do Repositorio De Documentacao.
+**Relacoes:** contem um ou mais Item De Trabalho; delimita onde a Publicacao ocorre dentro do Repositorio De Documentacao; e resolvido para o projeto ou container fisico correspondente dentro de um Sistema ALM por uma implementacao concreta (Provider/Profile, ver `docs/CAPABILITY_CONTRACT.md` e `docs/MAINTENANCE.md`, secao "Profile") — a resolucao em si nao e responsabilidade deste conceito nem deste documento.
 
 ### Item De Trabalho
 
@@ -38,7 +38,7 @@ Qualquer implementacao futura (qualquer sistema de ALM, qualquer cliente de IA) 
 
 **Responsabilidades:** prover acesso a um Item De Trabalho por identificador dentro de um Projeto; prover um Repositorio De Documentacao para Publicacao; prover um mecanismo de registro de Defeito.
 
-Um Projeto existe dentro de um Sistema ALM, que e responsavel por armazenar seus Item De Trabalho e seu Repositorio De Documentacao.
+Um Projeto (Logico) e realizado, dentro de um Sistema ALM, por um projeto ou container fisico especifico daquele sistema — o qual armazena seus Item De Trabalho e seu Repositorio De Documentacao. Essa realizacao concreta e resolvida pela implementacao (Provider/Profile), nunca assumida como identica ao identificador logico informado pelo usuario.
 
 **O que nao faz:** nao participa da geracao de Especificacao, Cenario BDD, Risco ou Lacuna — isso e responsabilidade do processamento, nao da fonte de dados.
 
@@ -181,6 +181,34 @@ Um Projeto existe dentro de um Sistema ALM, que e responsavel por armazenar seus
 * Todo processamento comeca a partir da identificacao explicita de um Projeto e de um Item De Trabalho dentro dele.
 * Nenhum processamento comeca sem essa dupla identificacao.
 * A entrada nunca pressupoe escopo amplo — multiplos projetos, todos os itens de um Projeto, ou todo o ciclo de trabalho corrente. O escopo padrao e sempre o Item De Trabalho identificado e suas relacoes diretas.
+* O Projeto desta entrada e sempre o Projeto (Logico): o identificador que o usuario informa, agnostico de Sistema ALM. Resolver esse identificador para o projeto ou container fisico correspondente dentro do Sistema ALM concreto em uso (ex.: nome de projeto no Azure DevOps, projeto ou site no Jira) e responsabilidade da implementacao (Provider/Profile) que cumpre este contrato — nunca uma equivalencia literal assumida por este documento ou por um Agente.
+
+### Contexto De Execução
+
+* Quando um Agente registra ou cria um recurso no Sistema ALM em nome do usuario (por exemplo, um Defeito), a entrada desse Agente se divide em duas categorias que nunca se misturam:
+  * **Decisoes de processo do workspace** — regras de negocio da equipe, nunca do ALM em si (ex.: qual tipo de Work Item usar para um determinado cenario). Sao sempre fornecidas explicitamente pelo usuario antes do processamento comecar; o Agente nunca as infere a partir de contexto.
+  * **Dados obtidos automaticamente** — tudo que for resolvivel via Capacidade sobre o Item De Trabalho relacionado (Area, Iteration, Parent e demais metadados). O Agente busca isso automaticamente e nunca solicita ao usuario algo ja resolvivel dessa forma.
+* Um Agente nunca inverte essa fronteira: nao infere uma decisao de processo, nem solicita de novo um dado auto-descobrivel.
+* O conjunto concreto de campos de cada categoria e especifico de cada Agente e de cada Profile — este contrato define a fronteira, nao uma lista fixa de campos.
+
+### Gate De Preparação De Ambiente
+
+* Antes de qualquer outro passo — antes de ler documentação adicional, consultar um Item De Trabalho, gerar Documento ou delegar para outro Agente — todo Agente executa este Gate como primeiro passo do seu proprio fluxo, independentemente de ter sido ativado diretamente pelo usuario ou por delegacao de outro Agente.
+* O Gate valida, no minimo:
+  * o Cliente De IA em uso esta identificado;
+  * um Profile valido esta carregado, para qualquer Agente cujo comportamento dependa de Profile — ou sua ausencia e confirmada de forma explicita, nunca presumida;
+  * as Capacidades obrigatorias para a operacao solicitada a este Agente estao disponiveis nesta sessao (ver `docs/CAPABILITY_CONTRACT.md`, "Regra De Degradacao Graciosa", na linha correspondente a este Agente);
+  * as ferramentas concretas que implementam essas Capacidades respondem nesta sessao.
+* Se qualquer item falhar, o Agente interrompe imediatamente: nao consulta o Item De Trabalho, nao inicia analise, nao gera Documento e nao delega para outro Agente. A unica excecao e o proprio diagnostico da falha, descrito abaixo — o Agente pode consultar `docs/SETUP.md` e `docs/TROUBLESHOOTING.md` deste framework exclusivamente para montar esse diagnostico, nunca para prosseguir com o pedido original.
+* O diagnostico de falha nunca e uma falha generica nem uma tentativa silenciosa seguida de fallback — ele identifica a causa e orienta ativamente a correcao. No minimo, ele:
+  1. identifica exatamente qual item do Gate falhou e a causa, nao apenas o sintoma, e confirma explicitamente que nenhum passo do pedido original foi executado por causa dessa falha;
+  2. identifica qual Cliente De IA esta em uso nesta sessao — o proprio primeiro item do Gate ja exige essa identificacao — e direciona o restante do diagnostico especificamente para esse Cliente, nunca uma lista generica cobrindo todos os Clientes suportados;
+  3. traduz a causa em passos ou comandos concretos, para esse Cliente, que preparam o item faltante, com base em `docs/SETUP.md` e `docs/TROUBLESHOOTING.md` — nunca inventados nem genericos;
+  4. explica como confirmar, dentro da propria sessao do Cliente, que a preparacao funcionou;
+  5. orienta explicitamente a repetir exatamente o mesmo pedido original assim que o ambiente estiver preparado, sem exigir que o usuario descubra sozinho os proximos passos.
+* Quando o Cliente De IA em uso nao puder ser identificado com confianca suficiente para os itens 2 a 4 acima, o proprio diagnostico declara essa ambiguidade de forma explicita e pergunta qual Cliente esta em uso, em vez de adivinhar ou listar todos os Clientes de forma generica.
+* Este Gate tem uma unica especificacao, a descrita nesta secao — incluindo o formato do diagnostico de falha acima. Cada Agente referencia este Gate por meio de uma instrucao curta e identica no seu proprio texto, apontando para esta secao como fonte de verdade — nunca reescrevendo ou parafraseando a lista de validacoes ou o formato do diagnostico acima. Uma mudanca no Gate exige editar apenas este documento, nunca cada Agente individualmente.
+* Quando `qa-orchestrator` delega para um especialista, validar antecipadamente os requisitos desse especialista antes de delegar e uma otimizacao permitida, mas nunca dispensa a execucao deste mesmo Gate pelo proprio especialista ao iniciar — cada Agente valida o que a sua propria operacao exige, mesmo quando outro Agente ja validou antes.
 
 ### Contrato De Processamento
 

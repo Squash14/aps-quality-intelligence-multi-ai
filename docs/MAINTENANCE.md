@@ -25,6 +25,8 @@ Componentes:
 | Area | Responsabilidade |
 | --- | --- |
 | `agents/` | Fonte canonica de agentes ja migrados (ver "Agentes" abaixo). Renderiza para os tres clientes via `scripts/render-agents.mjs`. |
+| `providers/` | (planejado — Fase 2, ver `docs/DECISIONS.md` DEC-0003) Adaptadores de Sistema ALM, um por ALM suportado. Ainda nao existe nesta etapa. |
+| `profiles/` | Configuracao concreta de cada workspace/organizacao (ver `docs/DECISIONS.md` DEC-0004). Primeiro Profile real: `profiles/apsen-arquitetura/profile.json`, lido em runtime por `qa-bug-specialist`. |
 | `clients/copilot/` | Template MCP do Copilot. |
 | `clients/codex/` | Template de profile MCP do Codex. |
 | `clients/claude/` | Template MCP do Claude Code. |
@@ -97,6 +99,7 @@ Regras de fronteira:
 * `qa-wiki-specialist` decide destino e publica, mas nao inventa regra funcional.
 * `qa-bug-specialist` atua somente quando o pedido envolver defeito.
 * Especialistas devem reutilizar contexto recebido e evitar novas chamadas MCP quando os dados ja forem suficientes.
+* Todo agente — incluindo os tres especialistas, que podem ser chamados diretamente pelo usuario sem passar por `qa-orchestrator` (ver `docs/USAGE.md`) — executa o Gate De Preparacao De Ambiente (`docs/DOMAIN_CONTRACT.md`) como primeiro passo do proprio fluxo, antes de ler documentacao adicional, consultar o Item De Trabalho ou delegar. Ver `docs/DECISIONS.md`, DEC-0006.
 
 ## Manutencao
 
@@ -110,7 +113,7 @@ Hoje: `qa-bug-specialist`, `qa-wiki-specialist`.
 2. Rode `node scripts/render-agents.mjs agents/<nome>.md` para regenerar `.claude/agents/`, `.codex/agents/` e `.github/agents/`.
 3. Nunca edite os tres arquivos gerados diretamente — a proxima regeneracao sobrescreve qualquer edicao manual sem aviso.
 4. Execute `./scripts/check.sh` (valida, entre outras coisas, que os gerados batem com a fonte via `render-agents.mjs --check-all`).
-5. Valide com um Work Item real antes de compartilhar com o time.
+5. Valide com um Work Item real antes de compartilhar com o time. Para `qa-bug-specialist`, use a suite de regressao em `docs/BUG_AGENT_VALIDATION.md` — rode os cenarios afetados pela mudanca, e todos os dez antes de uma mudanca estrutural.
 
 ### Agente ainda sem fonte canonica (`agents/<nome>.md` nao existe)
 
@@ -122,6 +125,45 @@ Hoje: `qa-orchestrator`, `qa-bdd-specialist`. Esses dois agentes ja divergiram d
 4. Execute `./scripts/check.sh` — hoje ele so confirma presenca de arquivo e de conceitos-chave (`scripts/validate-agent-assets.mjs`), **nao** equivalencia semantica completa entre os tres arquivos. Passar no check nao garante paridade real para esses dois agentes.
 5. Valide com um Work Item real em pelo menos dois clientes antes de compartilhar com o time.
 6. Ao terminar, considere migrar o agente para fonte canonica (`agents/<nome>.md`) seguindo o padrao de `qa-bug-specialist`/`qa-wiki-specialist`, para que o proximo check cubra esse agente por completo.
+
+### Provider (planejado — Fase 2, ver `docs/DECISIONS.md` DEC-0003)
+
+Esta estrutura ainda nao existe no repositorio nesta etapa (Etapa 1 do plano de migracao registrado em DEC-0003). Esta secao documenta o contrato que a extracao de Azure DevOps/Apsen (Etapa 3 do plano) e qualquer Provider futuro devem seguir quando forem de fato criados.
+
+Um Provider vive em `providers/<nome>/` e e responsavel por:
+
+1. Declarar, em `providers/<nome>/provider.md`, quais Capacidades de `docs/CAPABILITY_CONTRACT.md` ele cumpre. `Buscar Item De Trabalho` e obrigatoria para qualquer Provider valido. As demais sao opcionais, mas seguem a regra de emparelhamento descrita la: Buscar Documento/Publicar Documento so existem juntas, assim como Buscar Defeito/Criar Defeito — nunca metade de um par.
+2. Mapear o vocabulario de hierarquia do ALM (ex.: Epic/Feature/User Story/Task no Azure DevOps) para os termos de `docs/DOMAIN_CONTRACT.md`.
+3. Declarar o que constitui, para aquele tipo de ALM, uma instancia conectavel (Organizacao no Azure DevOps, Site no Jira, Conta no GitHub etc.) — e isso que um Profile aponta como qual instancia concreta esta em uso.
+4. Referenciar, sem embutir no texto de `provider.md`, um artefato de configuracao de conexao na mesma pasta (hoje sempre um template MCP, ex. `mcp-config.template.json`). O texto de `provider.md` nunca deve citar mecanismo de transporte, nome de tool MCP ou detalhe de protocolo — trocar o mecanismo no futuro deve exigir trocar esse arquivo, nunca reescrever `provider.md`.
+5. **Arquitetura-alvo para Resolucao De Projeto:** resolver, internamente a cada Capacidade que recebe Projeto como entrada (`Buscar Item De Trabalho`, `Buscar Defeito`, `Criar Defeito` etc.), o Projeto (Logico) informado pelo usuario para o projeto ou container fisico correspondente daquela instancia, usando o mapeamento declarado pelo Profile ativo (`sistema_alm.mapeamento_projeto_logico`). Esta resolucao e responsabilidade exclusiva do Provider (`docs/CAPABILITY_CONTRACT.md`, linha "Toda ocorrencia de 'Projeto'..."), nunca exposta ao Agente como uma etapa ou Capacidade propria — o Agente apenas informa o Projeto e recebe o resultado ja resolvido das Capacidades que chama. Ate o Provider ser extraido, ver "Profile" abaixo para a implementacao provisoria em vigor.
+
+Um Provider nao decide regra de negocio de QA, nao gera SPEC/BDD, nao decide layout de saida — isso permanece responsabilidade dos agentes. Validacao esperada quando esta estrutura existir: confirmar que os pares de Capacidade estao completos e que `Buscar Item De Trabalho` esta presente, alem de validacao ponta a ponta com um Item De Trabalho real.
+
+### Profile
+
+O primeiro Profile real do framework existe em `profiles/apsen-arquitetura/profile.json` (ver `docs/DECISIONS.md` DEC-0004), usado hoje apenas por `qa-bug-specialist`. Um Profile vive em `profiles/<nome>/profile.json` e e responsavel por declarar, para um workspace/organizacao especifico:
+
+* qual Provider este workspace usa (hoje declarado apenas como identificador textual, ex. `"provider": "azure-devops"` — `providers/` formal ainda nao existe, ver secao "Provider" acima);
+* o valor concreto da instancia de Sistema ALM (ex.: organizacao Azure DevOps "Apsen") e qual(is) Projeto(s) dentro dela, incluindo o mapeamento entre o Projeto (Logico) informado pelo usuario e o projeto fisico correspondente quando os nomes divergirem (`sistema_alm.mapeamento_projeto_logico`, ver "Implementacao Provisoria De Resolucao De Projeto" abaixo) — este campo e puramente declarativo: lista pares `logico`/`fisico` (e `aliases` opcionais), sem nenhuma logica de resolucao;
+* onde estao as credenciais — apenas a referencia de onde carregar, nunca o segredo em si (Principio 8 de `docs/PRINCIPLES.md`);
+* convencoes daquele workspace especifico, nao do ALM em geral (ex.: nomes de campo customizado como `Custom.Causadoproblema`, valores aceitos e aliases como `"Bug em produção"`, estrutura de paginas do Repositorio De Documentacao);
+* a politica de atribuicao automatica de responsavel — o que fazer quando o usuario nao informa um nome. O padrao seguro e nao definir responsavel, preservando o comportamento atual de `qa-bug-specialist`;
+* a politica de evidencias aceitas (tipos e limites suportados), quando o Provider implementar Anexar Evidencias;
+* acoes por evento (`acoes_por_evento`) — passos adicionais automaticos que um Agente executa apos um evento proprio (ex.: `apos_criar_defeito`), declarados como uma lista de acoes tipadas (campo `tipo`) por chave de evento. A primeira implementacao real e `qa-bug-specialist`, ver `docs/BUG_AGENT_TEMPLATE.md`. O nome do container e generico de proposito — um Agente futuro pode declarar sua propria chave de evento (ex.: `apos_publicar_documento`) no mesmo bloco, sem precisar de um conceito ou contrato novo.
+
+Multiplos Profiles podem apontar para o mesmo Provider (dois workspaces diferentes, ambos em Azure DevOps, por exemplo). Um Profile aponta para exatamente um Provider.
+
+**Mecanismo de carregamento:** leitura em runtime, nao merge em tempo de renderizacao. O agente e instruido, no proprio texto de `agents/qa-bug-specialist.md`, a ler o arquivo do Profile ativo no inicio da execucao antes de resolver Projeto, Tipo Do Defeito, Causa do problema ou qualquer outra convencao especifica do workspace. `scripts/render-agents.mjs` no conhece Profile e nao precisa mudar — o agente renderizado permanece identico independentemente de qual Profile esta ativo. Essa escolha (runtime vs render-time) foi deliberada: com um unico Profile em uso hoje, mesclar em tempo de renderizacao adicionaria uma dimensao de build (agente x cliente x Profile) sem necessidade real ainda (Principio 1). Revisitar quando houver demanda real por multiplos Profiles simultaneos no mesmo agente renderizado.
+
+**Implementacao Provisoria De Resolucao De Projeto:** a arquitetura-alvo (ver "Provider" acima) atribui a resolucao de Projeto (Logico) para projeto fisico exclusivamente ao Provider, nunca ao Agente. Como `providers/` ainda nao existe neste repositorio, `agents/qa-bug-specialist.md` executa hoje, provisoriamente, o mesmo procedimento que o Provider executara: ler `sistema_alm.mapeamento_projeto_logico` do Profile ativo, resolver o Projeto informado contra as entradas `logico`/`aliases` declaradas ali e, na ausencia de correspondencia, usar o proprio valor informado como identificador do projeto no Azure DevOps (fallback que preserva o comportamento anterior, quando nenhuma resolucao existia). Se o projeto resultante nao existir no Azure DevOps, o agente interrompe e informa explicitamente que falta uma entrada em `mapeamento_projeto_logico`, em vez de perguntar ao usuario qual projeto usar. Este procedimento existe apenas para que o comportamento observado hoje seja identico ao da arquitetura-alvo; ele migra inteiramente para dentro do Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003), sem exigir mudanca de contrato nem de Profile.
+
+Ao criar um novo Profile:
+
+1. Criar `profiles/<nome>/profile.json` com os campos acima.
+2. Nunca embutir segredo ou credencial no arquivo.
+3. Se o agente que vai consumir o Profile ainda referenciar valores hardcoded no proprio texto (vazamento de vocabulario, Principio 4), extrai-los para o Profile como parte da mesma mudanca — nao adicionar Profile sem remover o hardcode equivalente.
+4. Validar com um Work Item real antes de considerar o Profile pronto para uso do time.
 
 No Windows, use tambem:
 
@@ -159,6 +201,7 @@ Checklist de PR:
 * Se o agente ainda nao tem fonte canonica, os tres arquivos foram revisados lado a lado para o mesmo comportamento — o check automatizado nao garante isso para esses agentes.
 * Scripts de setup e validacao continuam alinhados com os docs.
 * Um fluxo com Work Item real foi verificado quando houve mudanca de comportamento dos agentes.
+* Se o Gate De Preparacao De Ambiente foi alterado, a mudanca foi feita apenas em `docs/DOMAIN_CONTRACT.md` — nenhum agente recebeu logica reescrita ou parafraseada do Gate, apenas a referencia curta ja existente.
 
 ## Seguranca
 

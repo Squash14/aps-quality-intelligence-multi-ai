@@ -117,27 +117,15 @@ Checklist:
 
 ## Validacao Do Agente De Bug
 
-Use quando houver mudanca no `qa-bug-specialist` ou no template de Bug. Evite criar Bugs artificiais; prefira um defeito real de QA.
+Use quando houver mudanca no `qa-bug-specialist`, em um Profile que ele consome (`profiles/<nome>/profile.json`) ou no template de Bug. Evite criar Bugs artificiais; prefira um defeito real de QA quando possivel.
 
-Entrada recomendada:
+A suite de regressao completa deste agente — dez cenarios fixos (Bug novo, duplicidade, Task filha, resolucao de Projeto, resolucao de Sprint, descricao completa, campos do processo, evidencias, vinculacao a Feature, resumo final), cada um com objetivo, entrada, comportamento esperado e criterios de aprovacao — vive em [BUG_AGENT_VALIDATION.md](BUG_AGENT_VALIDATION.md). Rode os cenarios afetados pela mudanca antes de compartilhar com o time; rode todos antes de uma mudanca estrutural (Gate, mecanismo de Profile, template de Resultado Final).
+
+Entrada recomendada para um cenario avulso:
 
 ```text
 Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLATE.md.
 ```
-
-Checklist:
-
-* Projeto foi informado.
-* Work Item relacionado foi validado no Azure DevOps.
-* Duplicidade foi pesquisada por titulo, erro, funcionalidade, massa de teste e Work Item relacionado.
-* Tipo `Bug em produção` foi normalizado quando o usuario escreveu sem acento.
-* `Custom.Causadoproblema` foi preenchido com valor aceito, por exemplo `Erros de Codificação` no projeto `Arquitetura`.
-* Sprint ativa foi identificada pela data atual quando a iteration nao foi informada.
-* `Assigned To` foi resolvido; se a busca direta falhou, o fallback por Work Items recentes foi usado.
-* Bug foi criado sem pedir confirmacao quando os dados obrigatorios estavam definidos.
-* Parent foi vinculado apos a criacao quando a relacao nao entrou no payload inicial.
-* Evidencias foram anexadas quando disponiveis; sem anexo, o Bug registrou `Evidencias: Nao informado`.
-* Resultado final trouxe ID, titulo, tipo, parent, area, iteration, causa, responsavel e URL.
 
 ## Evidencia Minima
 
