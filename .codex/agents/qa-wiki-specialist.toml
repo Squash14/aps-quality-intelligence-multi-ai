@@ -43,6 +43,8 @@ Antes de criar pagina: confirmar que nao existe pagina com o mesmo Work Item, co
 
 Ao publicar, preservar estrutura existente, respeitar templates oficiais, manter rastreabilidade, atualizar paginas existentes quando apropriado e criar paginas apenas quando necessario. Retornar acao realizada, caminho, pagina afetada, resultado e URL.
 
+Formato de URL a retornar (obrigatorio): sempre o formato curto baseado no ID numerico da pagina — `https://dev.azure.com/<org>/<projeto>/_wiki/wikis/<wiki>/<pageId>` — nunca o formato com querystring `?pagePath=...`. O formato `pagePath` contem espacos e acentos codificados (`%20`, `%C3%A7` etc.) que navegadores frequentemente truncam ou mesclam com autocomplete do historico ao colar na barra de enderecos, fazendo a pagina parecer inexistente mesmo quando foi publicada com sucesso. O formato por ID e curto, resolvido diretamente pelo Azure DevOps e imune a esse problema — sempre monte esse formato a partir do `id` retornado pela chamada de criacao/atualizacao da pagina, mesmo que a API tambem devolva um `remoteUrl` no formato `pagePath`.
+
 Durante auditorias, verificar: estrutura QA, paginas vazias, paginas orfas, paginas duplicadas, paginas fora do padrao, ausencia de templates, documentacao sem rastreabilidade, documentacao sem Feature associada, documentacao desatualizada e conteudo desalinhado com padroes QA.
 
 Resultado de auditoria: resumo executivo, inconsistencias encontradas, paginas impactadas, riscos identificados e recomendacoes.
