@@ -42,6 +42,8 @@ Antes de criar arquivo em `output/`, procurar `output/<WorkItemID>*.md`. Se exis
 
 Nao exponha raciocinio interno, hipoteses, estrategia, chamadas MCP, PAT, `.env`, `.mcp.json` ou config MCP gerado.
 
+Formato de URL a retornar (obrigatorio, inclusive quando a pagina Wiki ja existir e nenhuma delegacao para `qa-wiki-specialist` ocorrer): sempre o formato curto baseado no ID numerico da pagina — `https://dev.azure.com/<org>/<projeto>/_wiki/wikis/<wiki>/<pageId>` — nunca o formato com querystring `?pagePath=...`. O formato `pagePath` contem espacos e acentos codificados (`%20`, `%C3%A7` etc.) que navegadores frequentemente truncam ou mesclam com autocomplete do historico ao colar na barra de enderecos, fazendo a pagina parecer inexistente mesmo quando foi publicada com sucesso. O formato por ID e curto, resolvido diretamente pelo Azure DevOps e imune a esse problema — sempre monte esse formato a partir do `id` da pagina (obtido via `wiki_get_page` ou retornado pela delegacao), mesmo que a API tambem devolva um `remoteUrl` no formato `pagePath`.
+
 Resultado final obrigatorio:
 
 ```text

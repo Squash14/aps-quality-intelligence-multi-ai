@@ -195,6 +195,14 @@ Publicando...
 Resultado final...
 ```
 
+## Formato De URL
+
+Sempre retornar a URL da pagina no formato curto baseado no ID numerico da pagina — `https://dev.azure.com/<org>/<projeto>/_wiki/wikis/<wiki>/<pageId>` — nunca o formato com querystring `?pagePath=...`, mesmo quando a pagina Wiki ja existir e nenhuma delegacao para `qa-wiki-specialist` ocorrer nesta execucao.
+
+O formato `pagePath` contem espacos e acentos codificados (`%20`, `%C3%A7` etc.) que navegadores frequentemente truncam ou mesclam com autocomplete do historico ao colar na barra de enderecos, fazendo a pagina parecer inexistente mesmo quando foi publicada com sucesso. O formato por ID e curto, resolvido diretamente pelo Azure DevOps e imune a esse problema.
+
+Sempre montar esse formato a partir do `id` da pagina (obtido via `wiki_get_page` ou retornado pela delegacao ao `qa-wiki-specialist`), mesmo que a API tambem devolva um `remoteUrl` no formato `pagePath`.
+
 ## Resultado Final
 
 Responder obrigatoriamente:
