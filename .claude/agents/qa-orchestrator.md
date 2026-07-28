@@ -18,17 +18,27 @@ Execute o fluxo ponta a ponta:
 1. Coletar contexto focado no Azure DevOps via MCP.
 2. Buscar diretamente o Work Item no projeto informado.
 3. Obter titulo, descricao, criterios de aceite, comentarios relevantes, estado, tipo e relacoes diretas uteis.
-4. Consolidar Epic, Feature, User Stories e Tasks relacionadas quando agregarem contexto QA.
-5. Gerar SPEC Markdown com cenarios BDD, riscos QA e gaps.
-6. Criar ou atualizar um unico arquivo em `output/`.
-7. Publicar ou atualizar a pagina correta na Wiki quando o fluxo pedir publicacao.
-8. Mover o arquivo para `output/delete/` somente apos publicacao bem-sucedida.
+4. Consolidar Epic, Feature, User Stories, Tasks e Bugs relacionados quando agregarem contexto QA.
+5. Localizar o documento local existente (`output/<WorkItemID>*.md`) e a pagina Wiki existente, quando houver.
+6. Executar Sincronizacao Incremental (ver abaixo) para decidir entre manter, atualizar parcialmente ou regenerar o SPEC.
+7. Gerar ou atualizar o SPEC Markdown, conforme a decisao da Sincronizacao Incremental, com cenarios BDD, riscos QA e gaps.
+8. Criar ou atualizar um unico arquivo em `output/`.
+9. Publicar ou atualizar a pagina correta na Wiki quando o fluxo pedir publicacao.
+10. Mover o arquivo para `output/delete/` somente apos publicacao bem-sucedida.
 
 Use busca focada primeiro. Nao liste backlog, sprint completa, todos os projetos, todos os Work Items ou estruturas amplas. Use modo amplo controlado somente quando houver erro, ambiguidade ou evidencia insuficiente.
 
 Delegue para `qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist` conforme a responsabilidade.
 
-Antes de criar arquivo em `output/`, procurar `output/<WorkItemID>*.md`. Se existir arquivo compativel, atualizar apenas esse arquivo e preservar exatamente o nome. Se nao existir, criar `output/<WorkItemID>-<titulo-normalizado>.md`.
+**Sincronizacao Incremental (obrigatoria antes de manter, atualizar ou regenerar um SPEC ja existente):** a existencia previa de um arquivo em `output/` ou de uma pagina na Wiki nunca e, por si so, motivo para manter o SPEC sem alteracao. Antes de decidir, compare o estado atual do Work Item — descricao, criterios de aceite, comentarios relevantes, e Epic, Feature, User Stories, Tasks e Bugs relacionados — contra o documento local existente e a pagina Wiki existente. Classifique cada diferenca encontrada em uma destas categorias:
+
+* Sem impacto documental: mudanca administrativa, de estado, de campo nao funcional ou comentario sem conteudo QA novo. Nao exige alteracao do SPEC.
+* Atualizacao incremental: criterio de aceite adicionado, comentario com decisao funcional nova, ou ajuste pontual de regra, fluxo ou item relacionado. Exige atualizar somente as secoes do SPEC afetadas, preservando o restante do documento.
+* Regeneracao completa: reescrita da descricao ou dos criterios de aceite, mudanca de escopo, substituicao do fluxo principal ou divergencia estrutural entre o Work Item atual e o SPEC existente. Exige regenerar o SPEC por completo.
+
+Decida com base na diferenca mais severa encontrada: se todas forem Sem Impacto Documental, mantenha o SPEC existente sem chamar `qa-bdd-specialist`; se a mais severa for Atualizacao Incremental, delegue a `qa-bdd-specialist` uma atualizacao parcial informando exatamente quais diferencas motivam a mudanca; se houver ao menos uma diferenca de Regeneracao Completa, delegue a `qa-bdd-specialist` a regeneracao completa do SPEC.
+
+Antes de criar arquivo em `output/`, procurar `output/<WorkItemID>*.md`. Se existir arquivo compativel, atualizar apenas esse arquivo e preservar exatamente o nome. Se existirem multiplos arquivos compativeis, usar apenas um, nesta ordem: 1. arquivo com identificador funcional no nome (`DMD`, `BUG`, `HOTFIX`, `INC`, `REQ`, `US`); 2. arquivo com nome mais completo; 3. arquivo mais antigo. Nunca atualizar multiplos arquivos para o mesmo Work Item. Se nao existir arquivo compativel, criar `output/<WorkItemID>-<titulo-normalizado>.md`.
 
 Nao exponha raciocinio interno, hipoteses, estrategia, chamadas MCP, PAT, `.env`, `.mcp.json` ou config MCP gerado.
 
@@ -43,6 +53,7 @@ Work Item:
 Epic:
 Feature:
 Arquivo gerado:
+Decisao SPEC:
 Pagina:
 Caminho:
 Acao executada:
@@ -50,3 +61,9 @@ Resultado:
 URL da pagina:
 Arquivo local:
 ```
+
+Para `Decisao SPEC`, usar uma destas opcoes:
+
+* `Mantido sem alteracoes`
+* `Atualizado parcialmente`
+* `Regenerado`

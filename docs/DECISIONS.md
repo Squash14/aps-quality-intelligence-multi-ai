@@ -339,3 +339,34 @@ Consequencias:
 
 Principios relacionados:
 Principio 1 (Simplicidade Antes De Tudo), Principio 3 (Agnosticismo De IA), Principio 4 (Agnosticismo De ALM), Principio 5 (Contrato Estavel, Implementacao Substituivel), Principio 6 (Documentacao Viva), Principio 9 (Principio Da Evidencia).
+
+### DEC-0008 - Sincronizacao Incremental no `qa-orchestrator` e fonte canonica para `qa-bdd-specialist` (Etapa 2 parcial do plano de migracao)
+
+* Data: 2026-07-28
+* Status: Ativa
+
+Contexto:
+O `qa-orchestrator` decidia manter, atualizar ou regenerar o SPEC de um Work Item apenas verificando a existencia previa de um arquivo em `output/` ou de uma pagina na Wiki — sem comparar o conteudo atual do Item De Trabalho contra o que ja fora documentado. Isso viola, na pratica, o Contrato De Processamento de `docs/DOMAIN_CONTRACT.md` ("o processamento verifica a existencia de um registro correspondente... antes de decidir entre criar ou atualizar"): existencia nao e o mesmo que equivalencia de conteudo. Durante a validacao dessa mudanca nos tres clientes, uma auditoria linha a linha (nao apenas o check de conceitos-chave de `scripts/validate-agent-assets.mjs`) confirmou divergencia real ja registrada em `docs/AGENT_PARITY.md`: o `qa-orchestrator` tinha uma regra de desempate para multiplos arquivos compativeis em `output/` presente apenas no Copilot; e o `qa-bdd-specialist` tinha, apenas no Copilot, formato Gherkin explicito, um gate de validacao de suficiencia de evidencia, cobertura de cenario estendida, taxonomia de riscos/gaps e um checklist de validacao final — ausentes por completo nas versoes Claude/Codex.
+
+Decisao:
+* Adicionar "Sincronizacao Incremental" ao `qa-orchestrator`, nos tres clientes: antes de manter, atualizar parcialmente ou regenerar um SPEC, comparar o Item De Trabalho atual (descricao, criterios de aceite, comentarios relevantes, Epic/Feature/User Stories/Tasks/Bugs relacionados) contra o documento local e a pagina Wiki existentes, classificando cada diferenca como Sem Impacto Documental, Atualizacao Incremental ou Regeneracao Completa. A decisao segue a classificacao mais severa encontrada. A saida `# RESULTADO` ganha o campo `Decisao SPEC:` para tornar essa decisao sempre explicita (Contrato De Saida: "o resultado e sempre explicito").
+* Corrigir, nos tres clientes do `qa-orchestrator`, a divergencia pre-existente da regra de desempate de multiplos arquivos em `output/`, replicando o comportamento ja existente no Copilot para Claude e Codex.
+* Executar a Etapa 2 do plano de migracao (DEC-0003) para `qa-bdd-specialist`: criar `agents/qa-bdd-specialist.md` como fonte canonica, consolidando o comportamento mais completo e aderente a `docs/DOMAIN_CONTRACT.md`/`docs/CAPABILITY_CONTRACT.md` entre as tres variantes anteriores (nao uma copia automatica de nenhuma delas) — mantendo o formato Gherkin explicito, o gate de suficiencia, a cobertura de cenario estendida, a taxonomia de riscos/gaps e o checklist final antes vistos apenas no Copilot, e acrescentando uma instrucao nova para consumir a classificacao da Sincronizacao Incremental recebida do `qa-orchestrator`. `.claude/agents/`, `.codex/agents/` e `.github/agents/` passam a ser gerados por `scripts/render-agents.mjs`, nunca editados a mao.
+* `qa-orchestrator` permanece sem fonte canonica — a Etapa 2 fecha apenas a metade referente a `qa-bdd-specialist`; `qa-orchestrator` continua exigindo disciplina manual nos tres clientes ate ser migrado.
+
+Justificativa / Evidencia:
+Auditoria linha a linha dos tres arquivos de `qa-orchestrator` e de `qa-bdd-specialist` (nao apenas `scripts/validate-agent-assets.mjs`, que so verifica presenca de conceito-chave e nao pega essas diferencas) confirmou, com evidencia concreta de contagem de linhas e grep por trecho, exatamente as divergencias que `docs/AGENT_PARITY.md` ja antecipava. `scripts/render-agents.mjs --check-all` confirma equivalencia byte-a-byte entre a nova fonte canonica e os tres arquivos gerados apos a migracao (Principio 9).
+
+Alternativas consideradas:
+* Copiar a versao Copilot do `qa-bdd-specialist` diretamente para Claude/Codex sem revisao — descartado a pedido explicito: nao valida se todo o conteudo do Copilot e de fato o comportamento correto, apenas o mais completo; a consolidacao caso a caso evita herdar redundancia ou texto especifico de um cliente sem necessidade.
+* Manter `qa-bdd-specialist` sem fonte canonica e apenas alinhar manualmente os tres arquivos uma vez — descartado: repete o padrao de disciplina manual que ja causou a divergencia original; a proxima mudanca divergiria de novo sem checagem automatica.
+* Adiar a correcao da regra de desempate do `qa-orchestrator` por ser "pre-existente e nao relacionada" ao pedido original — descartado: o pedido de validacao de paridade e explicito em incluir qualquer divergencia encontrada, e a correcao e mecanica (copiar um paragrafo ja existente no Copilot), sem ambiguidade de comportamento a decidir.
+
+Consequencias:
+* `agents/qa-bdd-specialist.md` passa a existir; `scripts/render-agents.mjs --check-all` agora valida 3 fontes (antes 2).
+* `docs/AGENT_PARITY.md` e `docs/MAINTENANCE.md` precisam ser atualizados para mover `qa-bdd-specialist` da lista "sem fonte canonica" para "com fonte canonica", e `docs/AGENT_PARITY.md` deve deixar de listar `qa-bdd-specialist` como divergente.
+* `qa-orchestrator` continua no fluxo manual de manutencao (`docs/MAINTENANCE.md`, "Agente ainda sem fonte canonica"); qualquer mudanca futura nele deve repetir a auditoria linha a linha, nao apenas o check de conceitos-chave.
+* README.md ganha o campo `Decisao SPEC:` no formato de resultado documentado do `qa-orchestrator`.
+
+Principios relacionados:
+Principio 1 (Simplicidade Antes De Tudo), Principio 2 (Evolucao Incremental), Principio 3 (Agnosticismo De IA), Principio 5 (Contrato Estavel, Implementacao Substituivel), Principio 9 (Principio Da Evidencia).

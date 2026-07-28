@@ -385,6 +385,7 @@ Work Item:
 Epic:
 Feature:
 Arquivo gerado:
+Decisão SPEC:
 Página:
 Caminho:
 Ação executada:
@@ -392,6 +393,16 @@ Resultado:
 URL da página:
 Arquivo local:
 ```
+
+Para `Decisão SPEC`, esperado:
+
+```text
+Mantido sem alterações
+Atualizado parcialmente
+Regenerado
+```
+
+Antes de decidir manter, atualizar ou regenerar, o `qa-orchestrator` compara o Work Item atual (descrição, critérios de aceite, comentários relevantes, e Epic/Feature/User Stories/Tasks/Bugs relacionados) contra o documento local e a página Wiki existentes, e classifica cada diferença como sem impacto documental, atualização incremental ou regeneração completa — a existência prévia de um arquivo ou página nunca é, por si só, motivo para manter o SPEC sem essa análise.
 
 Para `Ação executada`, esperado:
 

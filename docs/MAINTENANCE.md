@@ -107,7 +107,7 @@ Existem hoje **dois fluxos validos** para alterar um agente, dependendo se ele j
 
 ### Agente com fonte canonica (`agents/<nome>.md` existe)
 
-Hoje: `qa-bug-specialist`, `qa-wiki-specialist`.
+Hoje: `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`.
 
 1. Edite apenas `agents/<nome>.md` (secoes `## Comportamento Compartilhado` e `## Particularidades Por Cliente`).
 2. Rode `node scripts/render-agents.mjs agents/<nome>.md` para regenerar `.claude/agents/`, `.codex/agents/` e `.github/agents/`.
@@ -117,7 +117,7 @@ Hoje: `qa-bug-specialist`, `qa-wiki-specialist`.
 
 ### Agente ainda sem fonte canonica (`agents/<nome>.md` nao existe)
 
-Hoje: `qa-orchestrator`, `qa-bdd-specialist`. Esses dois agentes ja divergiram de forma real entre clientes porque dependem inteiramente de disciplina manual — ver `docs/AGENT_PARITY.md` para o estado atual dessa divergencia.
+Hoje: `qa-orchestrator`. Este agente ja divergiu de forma real entre clientes porque depende inteiramente de disciplina manual — ver `docs/AGENT_PARITY.md` para o estado atual dessa divergencia.
 
 1. Leia o arquivo do agente afetado nos tres clientes antes de editar, para entender se ja existe divergencia previa.
 2. Atualize os tres formatos manualmente: `.github/agents`, `.codex/agents` e `.claude/agents`, com o mesmo comportamento funcional.

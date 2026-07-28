@@ -13,11 +13,13 @@ Execute o fluxo ponta a ponta:
 
 1. Receber `<Projeto> <WorkItemID>`.
 2. Coletar contexto focado no Azure DevOps via MCP.
-3. Repassar contexto consolidado ao `qa-bdd-specialist`.
-4. Salvar ou atualizar um unico arquivo local em `output/`.
-5. Repassar arquivo e contexto ao `qa-wiki-specialist`.
-6. Publicar ou atualizar a pagina correta na Wiki.
-7. Arquivar o arquivo local somente apos publicacao bem-sucedida.
+3. Localizar o documento local existente (`output/<WorkItemID>*.md`) e a pagina Wiki existente, quando houver.
+4. Executar Sincronizacao Incremental (ver secao propria abaixo) para decidir entre manter, atualizar parcialmente ou regenerar o SPEC.
+5. Repassar contexto consolidado e a decisao da Sincronizacao Incremental ao `qa-bdd-specialist`.
+6. Salvar ou atualizar um unico arquivo local em `output/`.
+7. Repassar arquivo e contexto ao `qa-wiki-specialist`.
+8. Publicar ou atualizar a pagina correta na Wiki.
+9. Arquivar o arquivo local somente apos publicacao bem-sucedida.
 
 ## Entrada
 
@@ -68,6 +70,31 @@ Ative modo amplo controlado somente quando:
 * o MCP retornar erro ou ambiguidade.
 
 No modo amplo controlado, consulte apenas o necessario e pare assim que houver evidencia suficiente.
+
+## Sincronizacao Incremental
+
+A existencia previa de um arquivo em `output/` ou de uma pagina na Wiki para o Work Item nunca e, por si so, motivo para manter o SPEC sem alteracao. Antes de decidir entre manter, atualizar parcialmente ou regenerar, compare:
+
+* o conteudo atual do Work Item (descricao, criterios de aceite, comentarios relevantes, estado);
+* Epic, Feature, User Stories, Tasks e Bugs relacionados;
+* o documento existente na Wiki, quando houver;
+* o documento local existente em `output/`, quando houver.
+
+Classifique cada diferenca encontrada nessa comparacao em uma destas categorias:
+
+| Categoria | Quando se aplica | Efeito sobre o SPEC |
+| --- | --- | --- |
+| Sem impacto documental | Mudanca administrativa, de estado, de campo nao funcional, ou comentario sem conteudo QA novo. | Nenhum. |
+| Atualizacao incremental | Criterio de aceite adicionado, comentario com decisao funcional nova, ou ajuste pontual de regra, fluxo ou item relacionado. | Atualizar somente as secoes do SPEC afetadas, preservando o restante do documento. |
+| Regeneracao completa | Reescrita da descricao ou dos criterios de aceite, mudanca de escopo, substituicao do fluxo principal, ou divergencia estrutural entre o Work Item atual e o SPEC existente. | Regenerar o SPEC por completo. |
+
+Decida com base na diferenca mais severa encontrada entre todas as comparadas:
+
+* todas Sem Impacto Documental → manter o SPEC existente sem chamar `qa-bdd-specialist`;
+* a mais severa e Atualizacao Incremental → delegar a `qa-bdd-specialist` uma atualizacao parcial, informando exatamente quais diferencas motivam a mudanca;
+* ao menos uma Regeneracao Completa → delegar a `qa-bdd-specialist` a regeneracao completa do SPEC.
+
+Nunca pule esta analise para decidir manter o SPEC apenas porque um arquivo ou pagina ja existe.
 
 ## Delegacao
 
@@ -181,6 +208,7 @@ Work Item:
 Epic:
 Feature:
 Arquivo gerado:
+Decisao SPEC:
 Pagina:
 Caminho:
 Acao executada:
@@ -188,6 +216,12 @@ Resultado:
 URL da pagina:
 Arquivo local:
 ```
+
+Para `Decisao SPEC`, usar uma destas opcoes:
+
+* `Mantido sem alteracoes`
+* `Atualizado parcialmente`
+* `Regenerado`
 
 Para `Acao executada`, usar uma destas opcoes:
 
@@ -206,7 +240,9 @@ Antes de encerrar, verificar:
 
 * Work Item analisado;
 * contexto consolidado;
-* SPEC e BDD gerados;
+* documento local e pagina Wiki existentes localizados antes de decidir;
+* Sincronizacao Incremental executada e diferencas classificadas antes de manter, atualizar ou regenerar;
+* SPEC e BDD gerados ou preservados conforme a decisao da Sincronizacao Incremental;
 * arquivo unico salvo ou atualizado;
 * destino Wiki identificado;
 * pagina criada ou atualizada;
