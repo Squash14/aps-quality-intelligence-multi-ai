@@ -143,10 +143,13 @@ if (placeholderValues.has(mcpPackage)) {
   process.exit(1);
 }
 
+const b64Pat = Buffer.from(`:${pat}`).toString("base64");
+
 const replacements = {
   __ORG__: org,
   __ORG_URL__: orgUrl,
   __PAT__: pat,
+  __PAT_B64__: b64Pat,
   __SERVER_NAME__: serverName,
   __MCP_PACKAGE__: mcpPackage,
 };
