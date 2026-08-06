@@ -43,12 +43,12 @@ Agentes disponíveis nos três clientes:
 
 | Agente | Quando usar | O que passar |
 | --- | --- | --- |
-| `qa-orchestrator` | Fluxo completo de documentação QA. | `<Projeto> <WorkItemID>` |
-| `qa-bdd-specialist` | Gerar SPEC/BDD sem publicar Wiki. | Projeto, Work Item ou contexto funcional. |
-| `qa-wiki-specialist` | Auditar, localizar, criar ou atualizar Wiki. | Projeto, Work Item, arquivo/conteúdo e intenção de leitura ou publicação. |
-| `qa-bug-specialist` | Analisar defeito e criar/localizar Bug. | Use o template em `docs/BUG_AGENT_TEMPLATE.md`. |
+| `qa-orchestrator` | Coordenar o fluxo completo: busca do Work Item, SPEC/BDD, Sincronização Incremental (decidir entre manter, atualizar parcialmente ou regenerar) e publicação na Wiki, ponta a ponta. | `<Projeto> <WorkItemID>` |
+| `qa-bdd-specialist` | Gerar ou revisar SPEC funcional e cenários BDD de forma especializada, sem publicar na Wiki. | Projeto, Work Item ou contexto funcional. |
+| `qa-wiki-specialist` | Publicar, atualizar, organizar e prevenir duplicidade de páginas na Wiki — auditoria, localização, criação e atualização. | Projeto, Work Item, arquivo/conteúdo e intenção de leitura ou publicação. |
+| `qa-bug-specialist` | Criar e manter Bugs no Azure DevOps: checagem de duplicidade, vínculos e ações pós-criação. | Use o template em `docs/BUG_AGENT_TEMPLATE.md`. |
 
-Na maioria dos casos, use `qa-orchestrator`.
+Escolha o especialista diretamente (`qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist`) quando o objetivo já for conhecido — por exemplo, só gerar SPEC/BDD, só validar/publicar Wiki, ou só criar um Bug. Use `qa-orchestrator` quando for necessário coordenar o fluxo completo, do Work Item até a publicação.
 
 ## Pré-Requisitos
 
@@ -337,9 +337,9 @@ Todo agente deste framework depende do Azure DevOps para localizar Work Item, co
 | Copilot | `/mcp show <nome do MCP>` (use `ado`, salvo se você alterou `MCP_SERVER_NAME`) |
 | Claude | `claude mcp list` (fora da sessão) |
 
-Se o servidor não aparecer, não peça o agente ainda. Revise a seção de setup do cliente escolhido primeiro — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
+Se o servidor não aparecer, não peça o agente ainda — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
 
-Independente do cliente, a conexão e a autenticação do MCP valem para a sessão atual, não para o config gerado em disco. Uma nova sessão pode indicar o MCP como desconectado ou pendente de autenticação mesmo com o setup já validado antes — isso não é uma falha de configuração. Nesse caso, reconecte ou reautentique usando o comando de MCP do próprio cliente antes de pedir qualquer agente, em vez de rodar `setup-mcp` novamente.
+A configuração persistente gerada pelo setup (`.mcp.json`, `.claude/settings.json`, o profile do Codex, `~/.copilot/permissions-config.json`) e a conexão/autenticação da sessão atual são coisas diferentes. Uma vez validado, o setup não precisa ser refeito a cada sessão — mas a conexão e a autenticação do MCP valem apenas para a sessão atual do cliente, não para o config gerado em disco. Se o servidor não aparecer, a causa mais comum é a sessão (MCP ainda não conectado ou pedindo reautenticação), não a configuração: primeiro reconecte ou reautentique usando o comando de MCP do próprio cliente (tabela acima). Isso pode variar conforme o cliente e a implementação do MCP em uso, e não significa que o setup precise ser executado novamente. Só revise a seção de setup do cliente escolhido se, mesmo após reconectar/reautenticar, o servidor continuar ausente.
 
 ## Resultado Final Esperado
 
@@ -428,7 +428,8 @@ aps-quality-intelligence-multi-ai/
 ├── CLAUDE.md
 ├── .env.example
 ├── agents/
-│   └── (fonte canonica de agentes ja migrados; ver docs/AGENT_PARITY.md)
+│   └── fonte canonica de qa-bdd-specialist, qa-bug-specialist e qa-wiki-specialist;
+│       qa-orchestrator ainda nao tem fonte canonica (ver docs/AGENT_PARITY.md)
 ├── clients/
 │   ├── copilot/
 │   ├── codex/
@@ -447,6 +448,15 @@ aps-quality-intelligence-multi-ai/
 ├── scripts/
 └── skills-lock.json
 ```
+
+## Branches Do Projeto
+
+* `main` — versão estável do framework.
+* `develop` — branch permanente de desenvolvimento, evolução e validação.
+
+Fluxo: `develop` → validação → Pull Request → `main`.
+
+Branches específicas ou temporárias (ex.: para uma mudança pontual) podem existir quando necessário, mas `main` e `develop` são as branches permanentes do projeto.
 
 ## Segurança
 
@@ -469,7 +479,7 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 | `PAT ainda está com valor de exemplo` | Edite `.env`, troque `AZURE_DEVOPS_PAT` e rode setup novamente. |
 | `npx não encontrado` | Instale Node.js/npm e abra um novo terminal. |
 | Cliente não encontrado | Instale Copilot CLI, Codex CLI ou Claude Code conforme o alvo escolhido. |
-| Servidor MCP do projeto não aparece na sessão | Rode setup e validate novamente para o mesmo cliente. |
+| Servidor MCP do projeto não aparece na sessão | Primeiro reconecte/reautentique via comando de MCP do cliente (veja [Antes De Usar Qualquer Agente](#antes-de-usar-qualquer-agente)). Só rode setup e validate novamente se o servidor continuar ausente depois disso. |
 | Agente não encontrado | Confirme que está na raiz do projeto e reinicie o cliente. |
 | Você escolheu Codex mas abriu Copilot | Feche o cliente errado e siga apenas o roteiro Codex. |
 | `Codex mostra Unrecognized command '/allow-all'` | Normal no Codex CLI. Desde o setup, `approval_policy = "on-request"` e `sandbox_mode = "workspace-write"` estão no profile — não é necessário nenhuma flag adicional. |
