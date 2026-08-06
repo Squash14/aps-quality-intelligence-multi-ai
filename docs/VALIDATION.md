@@ -40,6 +40,10 @@ default_tools_approval_mode = "approve"
 
 ## Validacao Por Cliente
 
+Gerar o config uma vez nao garante que toda sessao futura carrega o MCP automaticamente — em clientes com profile ou flag de projeto (como o Codex), a ativacao depende de como a sessao e iniciada. Repita a validacao abaixo sempre que abrir uma nova sessao, antes de pedir qualquer agente.
+
+Alem de carregar o config, a conexao e a autenticacao do MCP tambem sao caracteristicas da sessao atual, nao do config gerado. Uma nova sessao pode exibir o MCP como desconectado ou pendente de autenticacao mesmo com o config correto e ja validado antes — isso nao indica setup quebrado. Nesse caso, use o comando de validacao/reconexao do proprio cliente (por exemplo, o comando de listagem ou status de MCP da sessao) para reconectar ou reautenticar antes de pedir qualquer agente.
+
 Copilot:
 
 ```bash
@@ -58,6 +62,14 @@ Codex:
 codex --profile aps-quality-intelligence-multi-ai
 codex --profile aps-quality-intelligence-multi-ai mcp list
 ```
+
+Dentro da sessao Codex, tambem pode confirmar com:
+
+```text
+/mcp
+```
+
+Esperado: o servidor MCP configurado para este projeto aparece na lista de MCP servers conectados (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrao). Se a sessao mostrar `MCP servers: 0`, feche e reabra com `codex --profile aps-quality-intelligence-multi-ai` — rodar apenas `codex` carrega somente `~/.codex/config.toml`, sem os MCPs do projeto.
 
 Dentro do Codex, valide o agente:
 
@@ -78,7 +90,7 @@ Dentro do Claude, tambem pode validar:
 Use o agente qa-orchestrator para <Projeto> <WorkItemID>.
 ```
 
-Resultado esperado: o servidor `ado` aparece configurado/conectado.
+Resultado esperado: o servidor MCP configurado para este projeto aparece configurado/conectado (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrao).
 
 ## Validacao Com Work Item Real
 
@@ -105,27 +117,15 @@ Checklist:
 
 ## Validacao Do Agente De Bug
 
-Use quando houver mudanca no `qa-bug-specialist` ou no template de Bug. Evite criar Bugs artificiais; prefira um defeito real de QA.
+Use quando houver mudanca no `qa-bug-specialist`, em um Profile que ele consome (`profiles/<nome>/profile.json`) ou no template de Bug. Evite criar Bugs artificiais; prefira um defeito real de QA quando possivel.
 
-Entrada recomendada:
+A suite de regressao completa deste agente — dez cenarios fixos (Bug novo, duplicidade, Task filha, resolucao de Projeto, resolucao de Sprint, descricao completa, campos do processo, evidencias, vinculacao a Feature, resumo final), cada um com objetivo, entrada, comportamento esperado e criterios de aprovacao — vive em [BUG_AGENT_VALIDATION.md](BUG_AGENT_VALIDATION.md). Rode os cenarios afetados pela mudanca antes de compartilhar com o time; rode todos antes de uma mudanca estrutural (Gate, mecanismo de Profile, template de Resultado Final).
+
+Entrada recomendada para um cenario avulso:
 
 ```text
 Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLATE.md.
 ```
-
-Checklist:
-
-* Projeto foi informado.
-* Work Item relacionado foi validado no Azure DevOps.
-* Duplicidade foi pesquisada por titulo, erro, funcionalidade, massa de teste e Work Item relacionado.
-* Tipo `Bug em produção` foi normalizado quando o usuario escreveu sem acento.
-* `Custom.Causadoproblema` foi preenchido com valor aceito, por exemplo `Erros de Codificação` no projeto `Arquitetura`.
-* Sprint ativa foi identificada pela data atual quando a iteration nao foi informada.
-* `Assigned To` foi resolvido; se a busca direta falhou, o fallback por Work Items recentes foi usado.
-* Bug foi criado sem pedir confirmacao quando os dados obrigatorios estavam definidos.
-* Parent foi vinculado apos a criacao quando a relacao nao entrou no payload inicial.
-* Evidencias foram anexadas quando disponiveis; sem anexo, o Bug registrou `Evidencias: Nao informado`.
-* Resultado final trouxe ID, titulo, tipo, parent, area, iteration, causa, responsavel e URL.
 
 ## Evidencia Minima
 

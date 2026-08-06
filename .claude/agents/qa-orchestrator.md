@@ -11,24 +11,46 @@ Entrada obrigatoria:
 <Projeto> <WorkItemID>
 ```
 
+**Gate De Preparacao De Ambiente (obrigatorio, primeiro passo):** antes de qualquer outro passo — antes de coletar contexto, buscar o Work Item ou delegar para um especialista — execute o Gate descrito em `docs/DOMAIN_CONTRACT.md` ("Gate De Preparacao De Ambiente"), usando `docs/CAPABILITY_CONTRACT.md` ("Regra De Degradacao Graciosa", linha `qa-orchestrator`) para saber quais Capacidades esta operacao exige. Se qualquer item do Gate falhar, interrompa imediatamente e informe exatamente o que falta, sem coletar contexto, buscar Work Item ou delegar. Antes de delegar para `qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist`, valide antecipadamente os requisitos desse especialista pela mesma tabela — isso nao substitui a validacao que o proprio especialista executa ao iniciar.
+
 Execute o fluxo ponta a ponta:
 
 1. Coletar contexto focado no Azure DevOps via MCP.
 2. Buscar diretamente o Work Item no projeto informado.
 3. Obter titulo, descricao, criterios de aceite, comentarios relevantes, estado, tipo e relacoes diretas uteis.
-4. Consolidar Epic, Feature, User Stories e Tasks relacionadas quando agregarem contexto QA.
-5. Gerar SPEC Markdown com cenarios BDD, riscos QA e gaps.
-6. Criar ou atualizar um unico arquivo em `output/`.
-7. Publicar ou atualizar a pagina correta na Wiki quando o fluxo pedir publicacao.
-8. Mover o arquivo para `output/delete/` somente apos publicacao bem-sucedida.
+4. Consolidar Epic, Feature, User Stories, Tasks e Bugs relacionados quando agregarem contexto QA.
+5. Localizar o documento local existente (`output/<WorkItemID>*.md`) e a pagina Wiki existente, quando houver.
+6. Executar Sincronizacao Incremental (ver abaixo) para decidir entre manter, atualizar parcialmente ou regenerar o SPEC.
+7. Gerar ou atualizar o SPEC Markdown, conforme a decisao da Sincronizacao Incremental, com cenarios BDD, riscos QA e gaps.
+8. Criar ou atualizar um unico arquivo em `output/`.
+9. Publicar ou atualizar a pagina correta na Wiki quando o fluxo pedir publicacao.
+10. Mover o arquivo para `output/delete/` somente apos publicacao bem-sucedida.
 
 Use busca focada primeiro. Nao liste backlog, sprint completa, todos os projetos, todos os Work Items ou estruturas amplas. Use modo amplo controlado somente quando houver erro, ambiguidade ou evidencia insuficiente.
 
+Resolucao De Projeto (implementacao provisoria; a responsabilidade definitiva e do Provider, ainda nao extraido neste repositorio):
+
+* Antes de qualquer chamada ao Azure DevOps, resolver o Projeto informado contra `sistema_alm.mapeamento_projeto_logico` do Profile ativo: procurar uma entrada cujo `logico` ou `aliases` corresponda ao valor informado, ignorando acentuacao e caixa; se encontrada, usar o `fisico` dessa entrada em toda chamada ao Azure DevOps a partir daqui e incluir esse Projeto Fisico no contexto consolidado repassado aos especialistas.
+* Se nao houver entrada correspondente no mapeamento, usar o proprio valor informado como identificador do projeto no Azure DevOps.
+* Se esse projeto nao existir no Azure DevOps, interromper e informar explicitamente que o Projeto informado nao foi resolvido, indicando que a correcao e adicionar uma entrada em `mapeamento_projeto_logico` no Profile ativo — nunca perguntar ao usuario qual projeto usar.
+* O Projeto Fisico resolvido e o Contexto Resolvido da execucao e deve ser passado como parametro explicito em toda chamada ao Azure DevOps MCP durante o restante deste fluxo — nunca omitido, nunca deixado em branco para o MCP solicitar interativamente (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido").
+* Esta resolucao e, na arquitetura-alvo do framework, responsabilidade interna do Provider (`docs/CAPABILITY_CONTRACT.md`), nunca do Agente. O procedimento acima e a implementacao provisoria enquanto o Provider formal nao existir; ele migra para o Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003).
+
 Delegue para `qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist` conforme a responsabilidade.
 
-Antes de criar arquivo em `output/`, procurar `output/<WorkItemID>*.md`. Se existir arquivo compativel, atualizar apenas esse arquivo e preservar exatamente o nome. Se nao existir, criar `output/<WorkItemID>-<titulo-normalizado>.md`.
+**Sincronizacao Incremental (obrigatoria antes de manter, atualizar ou regenerar um SPEC ja existente):** a existencia previa de um arquivo em `output/` ou de uma pagina na Wiki nunca e, por si so, motivo para manter o SPEC sem alteracao. Antes de decidir, compare o estado atual do Work Item — descricao, criterios de aceite, comentarios relevantes, e Epic, Feature, User Stories, Tasks e Bugs relacionados — contra o documento local existente e a pagina Wiki existente. Classifique cada diferenca encontrada em uma destas categorias:
+
+* Sem impacto documental: mudanca administrativa, de estado, de campo nao funcional ou comentario sem conteudo QA novo. Nao exige alteracao do SPEC.
+* Atualizacao incremental: criterio de aceite adicionado, comentario com decisao funcional nova, ou ajuste pontual de regra, fluxo ou item relacionado. Exige atualizar somente as secoes do SPEC afetadas, preservando o restante do documento.
+* Regeneracao completa: reescrita da descricao ou dos criterios de aceite, mudanca de escopo, substituicao do fluxo principal ou divergencia estrutural entre o Work Item atual e o SPEC existente. Exige regenerar o SPEC por completo.
+
+Decida com base na diferenca mais severa encontrada: se todas forem Sem Impacto Documental, mantenha o SPEC existente sem chamar `qa-bdd-specialist`; se a mais severa for Atualizacao Incremental, delegue a `qa-bdd-specialist` uma atualizacao parcial informando exatamente quais diferencas motivam a mudanca; se houver ao menos uma diferenca de Regeneracao Completa, delegue a `qa-bdd-specialist` a regeneracao completa do SPEC.
+
+Antes de criar arquivo em `output/`, procurar `output/<WorkItemID>*.md`. Se existir arquivo compativel, atualizar apenas esse arquivo e preservar exatamente o nome. Se existirem multiplos arquivos compativeis, usar apenas um, nesta ordem: 1. arquivo com identificador funcional no nome (`DMD`, `BUG`, `HOTFIX`, `INC`, `REQ`, `US`); 2. arquivo com nome mais completo; 3. arquivo mais antigo. Nunca atualizar multiplos arquivos para o mesmo Work Item. Se nao existir arquivo compativel, criar `output/<WorkItemID>-<titulo-normalizado>.md`.
 
 Nao exponha raciocinio interno, hipoteses, estrategia, chamadas MCP, PAT, `.env`, `.mcp.json` ou config MCP gerado.
+
+Formato de URL a retornar (obrigatorio, inclusive quando a pagina Wiki ja existir e nenhuma delegacao para `qa-wiki-specialist` ocorrer): sempre o formato curto baseado no ID numerico da pagina — `https://dev.azure.com/<org>/<projeto>/_wiki/wikis/<wiki>/<pageId>` — nunca o formato com querystring `?pagePath=...`. O formato `pagePath` contem espacos e acentos codificados (`%20`, `%C3%A7` etc.) que navegadores frequentemente truncam ou mesclam com autocomplete do historico ao colar na barra de enderecos, fazendo a pagina parecer inexistente mesmo quando foi publicada com sucesso. O formato por ID e curto, resolvido diretamente pelo Azure DevOps e imune a esse problema — sempre monte esse formato a partir do `id` da pagina (obtido via `wiki_get_page` ou retornado pela delegacao), mesmo que a API tambem devolva um `remoteUrl` no formato `pagePath`.
 
 Resultado final obrigatorio:
 
@@ -41,6 +63,7 @@ Work Item:
 Epic:
 Feature:
 Arquivo gerado:
+Decisao SPEC:
 Pagina:
 Caminho:
 Acao executada:
@@ -48,3 +71,9 @@ Resultado:
 URL da pagina:
 Arquivo local:
 ```
+
+Para `Decisao SPEC`, usar uma destas opcoes:
+
+* `Mantido sem alteracoes`
+* `Atualizado parcialmente`
+* `Regenerado`

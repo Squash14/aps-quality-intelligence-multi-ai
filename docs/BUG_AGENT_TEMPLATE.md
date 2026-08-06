@@ -1,6 +1,6 @@
 # Template Para Bug
 
-Use este modelo sempre que chamar o `qa-bug-specialist`. Ele foi montado a partir do padrao observado no Bug `13788` do projeto `Arquitetura`.
+Use este modelo sempre que chamar o `qa-bug-specialist`. Ele reflete o template estruturado adotado em `docs/DECISIONS.md` (DEC-0004): campos de decisao de negocio sao informados explicitamente pelo QA, e o agente descobre automaticamente tudo o que puder obter do Azure DevOps.
 
 ## Prompt Recomendado
 
@@ -8,14 +8,11 @@ Use este modelo sempre que chamar o `qa-bug-specialist`. Ele foi montado a parti
 Use o agente qa-bug-specialist para criar um bug.
 
 Projeto:
-Tipo de bug: Bug em produção | Bug
-Feature/User Story/Task relacionada:
-Cenario testado:
+Item De Trabalho Relacionado:
 Ambiente:
-Perfil/usuario usado:
-Massa de teste:
-Causa do problema:
-Direcionar para:
+Tipo De Teste:
+Tipo Do Defeito:
+Observacoes:
 
 Erro encontrado:
 
@@ -28,6 +25,10 @@ Resultado atual:
 
 Resultado esperado:
 
+Causa do problema:
+
+Direcionar para:
+
 Recorrencia:
 
 Impacto:
@@ -38,57 +39,45 @@ Evidencias:
 
 ## O Que Informar
 
-Campos mais importantes:
+### Campos de decisao de negocio — sempre informados pelo QA, nunca inferidos pelo agente
 
 * `Projeto`: projeto do Azure DevOps, por exemplo `Arquitetura`.
-* `Tipo de bug`: use `Bug em produção` quando o defeito foi encontrado em producao; caso contrario use `Bug` ou deixe o agente inferir pelo projeto. Se escrever `Bug em producao`, o agente deve normalizar para `Bug em produção`.
-* `Feature/User Story/Task relacionada`: informe o ID quando souber. O agente deve validar no Azure DevOps e usar como parent hierarquico quando fizer sentido.
-* `Cenario testado`: fluxo QA que estava sendo executado.
+* `Item De Trabalho Relacionado`: ID da Feature, User Story ou Task. A partir dela o agente busca e herda automaticamente Area Path, Iteration/Sprint e Parent — nao informe esses três manualmente.
+* `Ambiente`: por exemplo `DEV`, `Homologacao`, `Producao`. E uma decisao do processo interno, nao algo que o agente deve deduzir do restante do texto.
+* `Tipo De Teste`: por exemplo `Regressivo`, `Funcional`, `Exploratorio`.
+* `Tipo Do Work Item`: o tipo real do Azure DevOps a ser criado, por exemplo `BUG EM PRODUÇÃO` ou `Bug`. Esta e uma regra de negocio da equipe (que tipo de defeito entra corretamente no Board da Sprint, por exemplo), nao uma regra do Azure DevOps — por isso o agente nunca deve inferir ou alterar esse valor a partir do ambiente, da causa ou de qualquer outro sinal. O agente normaliza apenas grafia/acentuacao/caixa contra os valores aceitos declarados no Profile ativo do workspace (`profiles/apsen-arquitetura/profile.json`). Se voce nao informar este campo, o agente usa o tipo padrao declarado no Profile.
+
+### Demais campos — conteudo do defeito
+
 * `Erro encontrado`: comportamento errado observado durante o teste.
-* `Resultado atual`: o que o sistema fez.
-* `Resultado esperado`: o que deveria acontecer.
-* `Causa do problema`: campo obrigatorio para `Bug em produção`. Informe quando souber. Exemplo observado aceito pelo Azure DevOps: `Erros de Codificação`. Se escrever `Erros de Codificacao`, o agente deve normalizar para `Erros de Codificação`.
-* `Direcionar para`: informe somente o nome da pessoa. O agente deve localizar a identidade no Azure DevOps e preencher `Assigned To`.
-* `Evidencias`: cole ou anexe prints, videos e arquivos no prompt. Se nao anexar nada, o Bug sera criado com `Evidencias: Nao informado`.
-
-Campos recomendados para evitar triagem incompleta:
-
-* ambiente exato, como producao, homologacao, navegador, versao, build ou release;
-* massa de teste objetiva, como EAN, codigo de produto, cliente, pedido ou usuario;
-* perfil/permissao usado;
-* recorrencia, por exemplo `ocorre sempre` ou `intermitente`;
-* impacto operacional.
+* `Passos para reproducao`, `Resultado atual`, `Resultado esperado`: conteudo funcional do defeito.
+* `Causa do problema`: informe quando souber (ex.: `Erros de Codificação`); o agente normaliza contra o Profile ativo. Campo obrigatorio para alguns tipos de defeito, conforme o Profile.
+* `Direcionar para`: informe somente o nome da pessoa; o agente localiza a identidade no Azure DevOps e preenche `Assigned To`.
+* `Recorrencia`, `Impacto`: contexto adicional recomendado.
+* `Evidencias`: cole ou anexe prints, videos e arquivos no prompt. Se nao anexar nada, o Bug e criado com `Evidencias: Nao informado`, sem bloquear a criacao.
 
 ## Regras Do Agente
 
 O agente deve:
 
+* usar exatamente o `Tipo Do Work Item` informado (normalizado pelo Profile ativo), sem inferir esse valor a partir de contexto;
 * consultar o Azure DevOps antes de criar;
-* verificar duplicidade por titulo, mensagem, funcionalidade, massa de teste e Work Item relacionado;
-* descobrir Area e Iteration a partir do Work Item relacionado ou padrao do projeto;
-* verificar a sprint ativa e preencher a Iteration correta quando o usuario nao informar;
-* validar Feature/User Story/Task informada e usar como parent quando adequado; se a criacao nao aceitar relacao no payload inicial, criar o Bug primeiro e depois vincular o parent com link hierarquico;
+* verificar duplicidade por titulo, mensagem, funcionalidade, massa de teste e Item De Trabalho Relacionado;
+* buscar o Item De Trabalho Relacionado e herdar automaticamente Area Path e Iteration dele; usar a sprint ativa do time apenas como fallback quando esse item nao tiver Iteration definida;
+* validar o Item De Trabalho Relacionado e usa-lo como parent quando adequado; se a criacao nao aceitar relacao no payload inicial, criar o Bug primeiro e depois vincular o parent com link hierarquico;
 * preencher `Assigned To` quando `Direcionar para` for informado; se a busca direta de identidade nao retornar resultado, buscar Work Items recentes atribuidos/criados por esse nome e reutilizar a identidade quando houver correspondencia unica;
-* preencher `Custom.Causadoproblema` para `Bug em produção`;
-* normalizar valores conhecidos do projeto `Arquitetura`, como `Bug em produção` e `Erros de Codificação`;
-* se a criacao falhar por valor fora da lista permitida, corrigir o label e tentar novamente;
+* ler o Profile ativo (`profiles/<nome>/profile.json`) antes de normalizar Tipo Do Work Item, Causa do problema ou nomes de campo customizado;
+* se a criacao falhar por valor fora da lista permitida, corrigir o label conforme o Profile e tentar novamente;
 * anexar evidencias quando o MCP suportar;
-* criar o Bug sem pedir confirmacao se nao houver duplicidade e todos os campos obrigatorios estiverem definidos.
+* criar o Bug sem pedir confirmacao se nao houver duplicidade e todos os campos obrigatorios estiverem definidos;
+* nao perguntar novamente Projeto, Item De Trabalho Relacionado, Ambiente ou Tipo Do Work Item quando ja informados;
+* apos criar um Bug novo nesta execucao (nunca quando um Bug existente e localizado por duplicidade), executar as acoes declaradas em `acoes_por_evento.apos_criar_defeito` no Profile ativo e reportar cada uma no resultado final.
 
-## Campos Obrigatorios Conhecidos Para Bug Em Produção
+## Profile Do Workspace Apsen/Arquitetura
 
-Consulta feita no Azure DevOps para o tipo `Bug em produção` indicou estes campos obrigatorios:
+Os valores e aliases especificos deste workspace (tipos de defeito aceitos, causas aceitas, nomes de campo customizado, politica de responsavel e de evidencias) vivem em `profiles/apsen-arquitetura/profile.json` — nao mais no texto do agente. Consulte esse arquivo como fonte de verdade; ele e a referencia usada pelo agente para normalizar os campos de decisao de negocio.
 
-| Campo | Reference name | Observacao |
-| --- | --- | --- |
-| Titulo | `System.Title` | Obrigatorio. |
-| Area | `System.AreaPath` / `System.AreaId` | Obrigatorio. |
-| Iteration | `System.IterationPath` / `System.IterationId` | Obrigatorio; usar sprint ativa quando aplicavel. |
-| State | `System.State` | Usar `New` na criacao. |
-| Causa do problema | `Custom.Causadoproblema` | Obrigatorio. |
-| Demanda aprovada | `Custom.Demandaaprovada` | Usar `false`, salvo evidencia contraria. |
-
-Valor de `Custom.Causadoproblema` validado no projeto `Arquitetura`: `Erros de Codificação`. Se o usuario nao informar a causa e o agente nao conseguir inferir com seguranca a partir de metadados ou padroes do projeto, ele deve perguntar antes de criar.
+Este workspace tambem declara uma acao pos-criacao (`acoes_por_evento.apos_criar_defeito`): apos criar um Bug novo, o agente cria automaticamente uma Task filha "Executar os testes", vinculada ao Bug, com Area e Iteration herdadas dele. `atribuir_para` esta configurado como `usuario_atual`, entao a Task e atribuida automaticamente a identidade da sessao que executou o fluxo (o QA que rodou o agente com seu proprio PAT), nunca a um nome fixo — cada QA que usar este mesmo Profile recebe a Task em seu proprio nome. Essa acao roda apenas quando um Bug novo e criado nesta execucao, nunca quando um Bug existente e localizado por duplicidade.
 
 ## Exemplo
 
@@ -96,14 +85,11 @@ Valor de `Custom.Causadoproblema` validado no projeto `Arquitetura`: `Erros de C
 Use o agente qa-bug-specialist para criar um bug.
 
 Projeto: Arquitetura
-Tipo de bug: Bug em produção
-Feature/User Story/Task relacionada: 8227
-Cenario testado: Consulta de produto por EAN na Politica de Desconto
+Item De Trabalho Relacionado: 8227
 Ambiente: Producao
-Perfil/usuario usado: usuario comercial com permissao de edicao
-Massa de teste: EAN 7890000000000, produto Produto Exemplo
-Causa do problema: Erros de Codificação
-Direcionar para: Gustavo
+Tipo De Teste: Regressivo
+Tipo Do Work Item: Bug em produção
+Observacoes:
 
 Erro encontrado:
 Ao buscar um produto pelo EAN, o sistema informa que nenhum registro foi encontrado, mas o produto existe e e localizado por outros dados.
@@ -119,6 +105,10 @@ A consulta retorna Nenhum registro foi encontrado.
 
 Resultado esperado:
 O sistema deve localizar e exibir o produto correspondente ao EAN informado.
+
+Causa do problema: Erros de Codificação
+
+Direcionar para: Gustavo
 
 Recorrencia:
 Ocorre sempre.

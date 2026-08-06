@@ -6,11 +6,13 @@
             "args": [
                 "-y",
                 "__MCP_PACKAGE__",
-                "__ORG__"
+                "__ORG__",
+                "--authentication",
+                "pat"
             ],
             "env": {
                 "AZURE_DEVOPS_ORG_URL": "__ORG_URL__",
-                "AZURE_DEVOPS_PAT": "__PAT__"
+                "PERSONAL_ACCESS_TOKEN": "__PAT_B64__"
             }
         }
     }

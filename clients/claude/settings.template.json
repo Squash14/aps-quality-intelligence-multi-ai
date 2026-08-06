@@ -1,0 +1,11 @@
+{
+    "enableAllProjectMcpServers": true,
+    "enabledMcpjsonServers": [
+        "__SERVER_NAME__"
+    ],
+    "permissions": {
+        "allow": [
+            "__MCP_PERMISSION_PREFIX__"
+        ]
+    }
+}

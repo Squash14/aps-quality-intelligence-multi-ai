@@ -41,17 +41,21 @@ render_client() {
 case "$TARGET" in
   all)
     render_client "Copilot" clients/copilot/mcp-config.template.json "$HOME/.copilot/mcp-config.json"
+    node scripts/update-copilot-permissions.mjs "$ENV_FILE" "$ROOT_DIR"
     render_client "Codex" clients/codex/config.template.toml "${CODEX_HOME:-$HOME/.codex}/$PROJECT_PROFILE.config.toml"
     render_client "Claude" clients/claude/mcp-config.template.json "$ROOT_DIR/.mcp.json"
+    render_client "Claude settings" clients/claude/settings.template.json "$ROOT_DIR/.claude/settings.json"
     ;;
   copilot)
     render_client "Copilot" clients/copilot/mcp-config.template.json "$HOME/.copilot/mcp-config.json"
+    node scripts/update-copilot-permissions.mjs "$ENV_FILE" "$ROOT_DIR"
     ;;
   codex)
     render_client "Codex" clients/codex/config.template.toml "${CODEX_HOME:-$HOME/.codex}/$PROJECT_PROFILE.config.toml"
     ;;
   claude)
     render_client "Claude" clients/claude/mcp-config.template.json "$ROOT_DIR/.mcp.json"
+    render_client "Claude settings" clients/claude/settings.template.json "$ROOT_DIR/.claude/settings.json"
     ;;
   *)
     echo ""

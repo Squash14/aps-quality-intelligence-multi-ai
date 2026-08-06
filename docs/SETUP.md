@@ -61,6 +61,20 @@ Windows:
 
 Use `all` somente quando os tres clientes estiverem instalados.
 
+## Validar Ativacao Do MCP
+
+Gerar o config nao garante que o cliente carrega o MCP automaticamente. Antes de usar qualquer agente, confirme a ativacao na sessao real. O nome do servidor MCP e definido em `MCP_SERVER_NAME` no `.env` (`ado` por padrao neste projeto); substitua pelo nome configurado se voce alterou esse valor:
+
+| Cliente | Comando de inicializacao | Como confirmar dentro da sessao |
+| --- | --- | --- |
+| Copilot | `copilot` | `/mcp show <nome do MCP>` |
+| Codex | `codex --profile aps-quality-intelligence-multi-ai` | `/mcp` |
+| Claude | `claude --mcp-config .mcp.json` | `claude --mcp-config .mcp.json mcp list` |
+
+No Codex, rodar apenas `codex` (sem `--profile`) carrega somente `~/.codex/config.toml` e resulta em `MCP servers: 0`. Isso nao e uma falha do setup nem do framework — e o comportamento padrao do Codex CLI quando nenhum profile e informado. Sempre inicie com `--profile aps-quality-intelligence-multi-ai`.
+
+Independente do cliente, a conexao e a autenticacao do MCP valem para a sessao atual, nao para o config gerado em disco. Ao abrir uma nova sessao, o cliente pode indicar o MCP como desconectado ou pendente de autenticacao mesmo que o setup ja tenha sido validado antes. Isso e esperado — reconecte ou reautentique usando o comando de MCP do proprio cliente antes de pedir qualquer agente, em vez de rodar `setup-mcp` novamente.
+
 ## Check De Manutencao
 
 macOS:

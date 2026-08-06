@@ -24,6 +24,12 @@ const claudeTemplatePath = path.join(
   "claude",
   "mcp-config.template.json",
 );
+const claudeSettingsTemplatePath = path.join(
+  rootDir,
+  "clients",
+  "claude",
+  "settings.template.json",
+);
 
 function runRender(envContent, templatePath = copilotTemplatePath, outputName = "mcp-config.json") {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "aps-mcp-render-"));
@@ -78,10 +84,9 @@ function testRenderCopilotSuccess() {
       rendered.mcpServers.ado.env.AZURE_DEVOPS_ORG_URL,
       "https://dev.azure.com/ExampleOrg",
     );
-    assert.equal(
-      rendered.mcpServers.ado.env.AZURE_DEVOPS_PAT,
-      "fake-test-token-not-secret",
-    );
+    // Template uses base64-encoded PAT in PERSONAL_ACCESS_TOKEN, not raw PAT.
+    const expectedB64 = Buffer.from(":fake-test-token-not-secret").toString("base64");
+    assert.equal(rendered.mcpServers.ado.env.PERSONAL_ACCESS_TOKEN, expectedB64);
     assertNoSecretLeak(result);
   } finally {
     cleanup(tempDir);
@@ -103,13 +108,17 @@ function testRenderCodexTomlSuccess() {
     assert.equal(raw.includes("__ORG_URL__"), false);
     assert.equal(raw.includes("__PAT__"), false);
     assert.match(raw, /\[mcp_servers\.ado\]/);
-    assert.match(raw, /args = \["-y", "@azure-devops\/mcp", "ExampleOrg"\]/);
+    assert.match(raw, /args = \["-y", "@azure-devops\/mcp", "ExampleOrg", "--authentication", "pat"\]/);
     assert.match(raw, /default_tools_approval_mode = "approve"/);
+    assert.match(raw, /approval_policy = "on-request"/);
+    assert.match(raw, /sandbox_mode = "workspace-write"/);
     assert.match(
       raw,
       /AZURE_DEVOPS_ORG_URL = "https:\/\/dev\.azure\.com\/ExampleOrg"/,
     );
-    assert.match(raw, /AZURE_DEVOPS_PAT = "fake-test-token-not-secret"/);
+    // Template uses base64-encoded PAT in PERSONAL_ACCESS_TOKEN.
+    const expectedB64 = Buffer.from(":fake-test-token-not-secret").toString("base64");
+    assert.match(raw, new RegExp(`PERSONAL_ACCESS_TOKEN = "${expectedB64}"`));
     assertNoSecretLeak(result);
   } finally {
     cleanup(tempDir);
@@ -128,10 +137,29 @@ function testRenderClaudeSuccess() {
     const rendered = JSON.parse(fs.readFileSync(outputPath, "utf8"));
     assert.equal(rendered.mcpServers.ado.args[1], "@azure-devops/mcp");
     assert.equal(rendered.mcpServers.ado.args[2], "ExampleOrg");
-    assert.equal(
-      rendered.mcpServers.ado.env.AZURE_DEVOPS_PAT,
-      "fake-test-token-not-secret",
-    );
+    // Template uses base64-encoded PAT in PERSONAL_ACCESS_TOKEN.
+    const expectedB64 = Buffer.from(":fake-test-token-not-secret").toString("base64");
+    assert.equal(rendered.mcpServers.ado.env.PERSONAL_ACCESS_TOKEN, expectedB64);
+    assertNoSecretLeak(result);
+  } finally {
+    cleanup(tempDir);
+  }
+}
+
+function testRenderClaudeSettingsSuccess() {
+  const { tempDir, outputPath, result } = runRender(
+    exampleEnv(),
+    claudeSettingsTemplatePath,
+    "settings.json",
+  );
+
+  try {
+    assert.equal(result.status, 0, result.stderr);
+
+    const rendered = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+    assert.equal(rendered.enableAllProjectMcpServers, true);
+    assert.deepEqual(rendered.enabledMcpjsonServers, ["ado"]);
+    assert.deepEqual(rendered.permissions.allow, ["mcp__ado"]);
     assertNoSecretLeak(result);
   } finally {
     cleanup(tempDir);
@@ -172,6 +200,7 @@ AZURE_DEVOPS_PAT=fake-test-token-not-secret
 testRenderCopilotSuccess();
 testRenderCodexTomlSuccess();
 testRenderClaudeSuccess();
+testRenderClaudeSettingsSuccess();
 testRejectPlaceholderPat();
 testRejectMissingOrg();
 

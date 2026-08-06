@@ -1,8 +1,11 @@
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
 [mcp_servers.__SERVER_NAME__]
 command = "npx"
-args = ["-y", "__MCP_PACKAGE__", "__ORG__"]
+args = ["-y", "__MCP_PACKAGE__", "__ORG__", "--authentication", "pat"]
 default_tools_approval_mode = "approve"
 
 [mcp_servers.__SERVER_NAME__.env]
 AZURE_DEVOPS_ORG_URL = "__ORG_URL__"
-AZURE_DEVOPS_PAT = "__PAT__"
+PERSONAL_ACCESS_TOKEN = "__PAT_B64__"

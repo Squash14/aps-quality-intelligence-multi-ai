@@ -1,0 +1,61 @@
+{
+  "workspace": "apsen-arquitetura",
+  "provider": "azure-devops",
+  "sistema_alm": {
+    "organizacao": "Apsen",
+    "projeto_padrao": "Arquitetura",
+    "mapeamento_projeto_logico": [
+      { "logico": "PPDS", "fisico": "Arquitetura", "aliases": ["ppds"] }
+    ],
+    "time_padrao": "Arquitetura Team"
+  },
+  "tipo_defeito": {
+    "padrao": "Bug em produção",
+    "valores_aceitos": [
+      {
+        "canonico": "Bug em produção",
+        "aliases": ["Bug em producao", "BUG EM PRODUÇÃO", "bug em produção", "bug em producao"]
+      },
+      {
+        "canonico": "Bug",
+        "aliases": ["bug"]
+      }
+    ]
+  },
+  "causa_do_problema": {
+    "campo_customizado": "Custom.Causadoproblema",
+    "obrigatorio_para": ["Bug em produção"],
+    "valores_aceitos": [
+      {
+        "canonico": "Erros de Codificação",
+        "aliases": ["Erros de Codificacao", "erros de codificação", "erros de codificacao"]
+      }
+    ]
+  },
+  "campos_customizados": {
+    "demanda_aprovada": "Custom.Demandaaprovada"
+  },
+  "politica_demanda_aprovada": {
+    "padrao": false,
+    "observacao": "usar false salvo evidencia contraria"
+  },
+  "politica_responsavel": {
+    "padrao": "nao definir responsavel quando nao informado nem inferivel com seguranca por nome"
+  },
+  "politica_evidencias": {
+    "quando_ausente": "Nao informado",
+    "bloqueia_criacao": false
+  },
+  "acoes_por_evento": {
+    "apos_criar_defeito": [
+      {
+        "tipo": "criar_item_relacionado",
+        "tipo_item": "Task",
+        "titulo": "Executar os testes",
+        "vinculo": "filho",
+        "herdar_area_iteration_do_pai": true,
+        "atribuir_para": "usuario_atual"
+      }
+    ]
+  }
+}

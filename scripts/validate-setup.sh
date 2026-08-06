@@ -65,10 +65,17 @@ validate_tool() {
 
 validate_copilot() {
   local config_file="$HOME/.copilot/mcp-config.json"
+  local perms_file="$HOME/.copilot/permissions-config.json"
 
   validate_common_file "$config_file" "copilot"
   validate_json "$config_file"
   validate_tool copilot "Copilot CLI"
+
+  if [ -f "$perms_file" ] && node -e "const d=JSON.parse(require('node:fs').readFileSync('$perms_file','utf8')); const loc=d.locations&&d.locations['$ROOT_DIR']; process.exit(loc&&loc.tool_approvals&&loc.tool_approvals.length>0?0:1);" 2>/dev/null; then
+    echo "OK - Copilot permissions pre-aprovadas para $ROOT_DIR"
+  else
+    echo "AVISO: permissions-config.json sem pre-aprovacoes para $ROOT_DIR. Execute ./scripts/setup-mcp.sh copilot novamente."
+  fi
 }
 
 validate_codex() {
@@ -90,14 +97,36 @@ validate_codex() {
   fi
 
   echo "OK - Codex MCP tools autoaprovadas"
+
+  if ! grep -q '^approval_policy = "on-request"' "$config_file"; then
+    echo "AVISO: approval_policy nao encontrado no profile Codex. Execute ./scripts/setup-mcp.sh codex."
+  else
+    echo "OK - Codex approval_policy configurado"
+  fi
+
+  if ! grep -q '^sandbox_mode = "workspace-write"' "$config_file"; then
+    echo "AVISO: sandbox_mode nao encontrado no profile Codex. Execute ./scripts/setup-mcp.sh codex."
+  else
+    echo "OK - Codex sandbox_mode configurado"
+  fi
+
   validate_tool codex "Codex CLI"
 }
 
 validate_claude() {
   local config_file="$ROOT_DIR/.mcp.json"
+  local settings_file="$ROOT_DIR/.claude/settings.json"
 
   validate_common_file "$config_file" "claude"
   validate_json "$config_file"
+
+  if [ -f "$settings_file" ]; then
+    validate_json "$settings_file"
+    echo "OK - Claude settings.json encontrado"
+  else
+    echo "AVISO: .claude/settings.json nao encontrado. Execute ./scripts/setup-mcp.sh claude."
+  fi
+
   validate_tool claude "Claude Code"
 }
 
