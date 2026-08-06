@@ -1,3 +1,6 @@
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
 [mcp_servers.__SERVER_NAME__]
 command = "npx"
 args = ["-y", "__MCP_PACKAGE__", "__ORG__", "--authentication", "pat"]

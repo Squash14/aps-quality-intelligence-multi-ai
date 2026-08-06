@@ -126,35 +126,12 @@ codex --profile aps-quality-intelligence-multi-ai
 codex --profile aps-quality-intelligence-multi-ai
 ```
 
-O setup do Codex gera o profile com `default_tools_approval_mode = "approve"` para o servidor MCP configurado (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrão neste projeto). Isso evita perguntas repetidas para cada chamada Azure DevOps, como `wit_get_work_item`, `wit_get_work_items_batch_by_ids`, `wiki_list_wikis` e `search_wiki`.
+O setup do Codex gera o profile com:
+- `default_tools_approval_mode = "approve"` — auto-aprova chamadas ao servidor MCP `ado`;
+- `approval_policy = "on-request"` — o modelo decide quando pedir aprovação para comandos shell;
+- `sandbox_mode = "workspace-write"` — permite escrita de arquivos dentro do diretório do projeto (necessário para salvar arquivos em `output/`).
 
-Se você já tinha gerado o profile antes desta configuração, rode novamente:
-
-```bash
-./scripts/setup-mcp.sh codex
-./scripts/validate-setup.sh codex
-```
-
-Depois feche a sessão Codex aberta e inicie outra:
-
-```bash
-codex --profile aps-quality-intelligence-multi-ai
-```
-
-No Codex CLI, comandos de permissao como `/allow-all` nao sao suportados dentro da sessao. Se precisar reduzir prompts de aprovacao, defina isso ao iniciar o Codex:
-
-```bash
-codex --profile aps-quality-intelligence-multi-ai \
-  --sandbox workspace-write \
-  --ask-for-approval on-request
-```
-
-Para uma sessao totalmente liberada, use somente em ambiente confiavel:
-
-```bash
-codex --profile aps-quality-intelligence-multi-ai \
-  --dangerously-bypass-approvals-and-sandbox
-```
+Não é necessário passar flags `--sandbox` ou `--ask-for-approval` ao iniciar o Codex após o setup.
 
 ### Dentro do Codex
 
@@ -220,11 +197,9 @@ copilot
 
 ### Dentro do Copilot
 
-Comandos recomendados no início da sessão:
+Após o setup, abra o Copilot e use diretamente:
 
 ```text
-/allow-all
-/caveman Ultra
 /agent
 qa-orchestrator
 Backoffice 11234
@@ -250,6 +225,10 @@ qa-bug-specialist
 Projeto Backoffice. Defeito: <descrição do defeito>.
 ```
 
+> **Nota:** o `setup-mcp.sh copilot` pré-aprova automaticamente todas as ferramentas do servidor MCP `ado` para este diretório via `~/.copilot/permissions-config.json`. Não é necessário executar `/allow-all` a cada sessão após o setup.
+
+> **Opcional:** `/caveman Ultra` ativa respostas mais curtas (economia de tokens). Não é requisito para executar os agentes.
+
 Validar MCP dentro do Copilot:
 
 ```text
@@ -271,7 +250,7 @@ Use este roteiro se você escolheu Claude Code.
 ```bash
 ./scripts/setup-mcp.sh claude
 ./scripts/validate-setup.sh claude
-claude --mcp-config .mcp.json --agent qa-orchestrator
+claude
 ```
 
 ### Windows PowerShell
@@ -279,18 +258,18 @@ claude --mcp-config .mcp.json --agent qa-orchestrator
 ```powershell
 .\scripts\setup-mcp.ps1 claude
 .\scripts\validate-setup.ps1 claude
-claude --mcp-config .mcp.json --agent qa-orchestrator
+claude
 ```
+
+O setup do Claude gera:
+- `.mcp.json` com o servidor MCP `ado`;
+- `.claude/settings.json` com `enableAllProjectMcpServers: true` e permissão pré-aprovada para todas as ferramentas do servidor `ado`.
+
+Com essas configurações, `claude` iniciado da raiz do projeto carrega o MCP automaticamente e não solicita confirmação por ferramenta. O flag `--mcp-config .mcp.json` não é necessário.
 
 ### Dentro do Claude
 
-Se abriu com `--agent qa-orchestrator`, informe:
-
-```text
-Backoffice 11234
-```
-
-Ou peça explicitamente:
+Após abrir o Claude na raiz do projeto, use diretamente:
 
 ```text
 Use o agente qa-orchestrator para Backoffice 11234.
@@ -298,25 +277,25 @@ Use o agente qa-orchestrator para Backoffice 11234.
 
 Para outros agentes:
 
-```bash
-claude --mcp-config .mcp.json --agent qa-bdd-specialist
+```text
+Use o agente qa-bdd-specialist para gerar SPEC e cenários BDD do Work Item Backoffice 11234, sem publicar na Wiki.
 ```
 
-```bash
-claude --mcp-config .mcp.json --agent qa-wiki-specialist
+```text
+Use o agente qa-wiki-specialist para validar o destino Wiki do Work Item Backoffice 11234 sem publicar.
 ```
 
-```bash
-claude --mcp-config .mcp.json --agent qa-bug-specialist
+```text
+Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLATE.md.
 ```
 
 Validar MCP no Claude:
 
 ```bash
-claude --mcp-config .mcp.json mcp list
+claude mcp list
 ```
 
-Esperado: o servidor MCP configurado para este projeto aparece configurado/conectado (nome definido em `MCP_SERVER_NAME` no `.env`; `ado` por padrão).
+Esperado: o servidor MCP `ado` aparece configurado/conectado.
 
 ## Skills E Comandos Úteis
 
@@ -337,22 +316,12 @@ Comandos úteis:
 No Copilot, o fluxo histórico recomendado é:
 
 ```text
-/allow-all
-/caveman Ultra
 /agent
 qa-orchestrator
 Backoffice 11234
 ```
 
-No Claude Code, comandos como `/allow-all` podem existir conforme a versao/configuracao do cliente.
-
-No Codex CLI, `/allow-all` nao existe. Configure permissoes por flags ao iniciar o cliente, por exemplo:
-
-```bash
-codex --profile aps-quality-intelligence-multi-ai --sandbox workspace-write --ask-for-approval on-request
-```
-
-No Codex e no Claude, prefira pedir o agente explicitamente em portugues:
+No Claude Code e no Codex, prefira pedir o agente explicitamente em português:
 
 ```text
 Use o agente qa-orchestrator para Backoffice 11234.
@@ -366,7 +335,7 @@ Todo agente deste framework depende do Azure DevOps para localizar Work Item, co
 | --- | --- |
 | Codex | `/mcp` |
 | Copilot | `/mcp show <nome do MCP>` (use `ado`, salvo se você alterou `MCP_SERVER_NAME`) |
-| Claude | `claude --mcp-config .mcp.json mcp list` (fora da sessão) |
+| Claude | `claude mcp list` (fora da sessão) |
 
 Se o servidor não aparecer, não peça o agente ainda. Revise a seção de setup do cliente escolhido primeiro — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
 
@@ -503,7 +472,7 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 | Servidor MCP do projeto não aparece na sessão | Rode setup e validate novamente para o mesmo cliente. |
 | Agente não encontrado | Confirme que está na raiz do projeto e reinicie o cliente. |
 | Você escolheu Codex mas abriu Copilot | Feche o cliente errado e siga apenas o roteiro Codex. |
-| Codex mostra `Unrecognized command '/allow-all'` | Normal no Codex CLI. Use flags de inicializacao como `--sandbox workspace-write --ask-for-approval on-request` ou `--dangerously-bypass-approvals-and-sandbox`. |
+| `Codex mostra Unrecognized command '/allow-all'` | Normal no Codex CLI. Desde o setup, `approval_policy = "on-request"` e `sandbox_mode = "workspace-write"` estão no profile — não é necessário nenhuma flag adicional. |
 | Codex mostra `MCP servers: 0` | Você iniciou `codex` sem `--profile aps-quality-intelligence-multi-ai`. Sem esse profile, o Codex carrega somente `~/.codex/config.toml` e nenhum MCP do projeto. Feche a sessão e inicie com `codex --profile aps-quality-intelligence-multi-ai`. |
 | Agente não encontra Work Item, Wiki ou qualquer dado mesmo com setup correto | Confirme que o MCP Azure DevOps está carregado na sessão atual (`/mcp` no Codex, `/mcp show <nome do MCP>` no Copilot, `claude mcp list` no Claude) antes de repetir o pedido. Veja [Antes De Usar Qualquer Agente](#antes-de-usar-qualquer-agente). |
 | Nova sessão mostra aviso de autenticação ou conexão MCP pendente, mesmo com setup já validado antes | Isso é esperado: a conexão e a autenticação do MCP valem para a sessão atual do cliente, não para o config gerado em disco. Use o comando de MCP do próprio cliente para reconectar ou reautenticar antes de pedir qualquer agente; não é necessário rodar `setup-mcp` novamente. |

@@ -152,6 +152,7 @@ const replacements = {
   __PAT_B64__: b64Pat,
   __SERVER_NAME__: serverName,
   __MCP_PACKAGE__: mcpPackage,
+  __MCP_PERMISSION_PREFIX__: `mcp__${serverName}`,
 };
 
 const rawTemplate = fs.readFileSync(templatePath, "utf8");

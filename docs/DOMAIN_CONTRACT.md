@@ -191,6 +191,14 @@ Um Projeto (Logico) e realizado, dentro de um Sistema ALM, por um projeto ou con
 * Um Agente nunca inverte essa fronteira: nao infere uma decisao de processo, nem solicita de novo um dado auto-descobrivel.
 * O conjunto concreto de campos de cada categoria e especifico de cada Agente e de cada Profile — este contrato define a fronteira, nao uma lista fixa de campos.
 
+**Propagacao Do Contexto Resolvido (regra global, todos os Agentes, todos os ALMs):**
+
+* Sempre que o Agente, como implementacao provisoria do Provider (ver `docs/MAINTENANCE.md`), resolver o Projeto (Logico) para um Projeto Fisico — ou resolver o Time a partir de `sistema_alm.time_padrao` do Profile ativo — esses valores formam o **Contexto Resolvido** da execucao e devem ser mantidos durante todo o fluxo restante.
+* Todo Agente que invoque uma Capacidade cujo mecanismo de transporte (MCP, API direta ou equivalente) aceite projeto ou time como parametro deve passar o Contexto Resolvido **explicitamente em cada chamada** — nunca omitido, nunca deixado em branco, nunca delegado ao mecanismo de transporte para solicitar interativamente ao usuario.
+* Se o mecanismo de transporte solicitar selecao interativa de projeto ou time em uma sessao onde esses valores ja foram resolvidos, isso indica parametro omitido — a correcao e incluir o valor resolvido na chamada; nunca responder ao seletor interativo.
+* Quando um Agente recebe contexto consolidado de outro Agente (ex.: `qa-orchestrator` delega para `qa-bdd-specialist`), o Projeto Fisico ja resolvido e o Time ja resolvido devem ser incluidos nesse contexto e reutilizados pelo Agente receptor sem nova resolucao.
+* Esta regra e agnostica de ALM e de mecanismo de transporte: aplica-se a Azure DevOps, Jira ou qualquer outro Provider futuro.
+
 ### Gate De Preparação De Ambiente
 
 * Antes de qualquer outro passo — antes de ler documentação adicional, consultar um Item De Trabalho, gerar Documento ou delegar para outro Agente — todo Agente executa este Gate como primeiro passo do seu proprio fluxo, independentemente de ter sido ativado diretamente pelo usuario ou por delegacao de outro Agente.

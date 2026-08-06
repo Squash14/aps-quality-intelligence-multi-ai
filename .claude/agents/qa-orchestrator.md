@@ -28,6 +28,14 @@ Execute o fluxo ponta a ponta:
 
 Use busca focada primeiro. Nao liste backlog, sprint completa, todos os projetos, todos os Work Items ou estruturas amplas. Use modo amplo controlado somente quando houver erro, ambiguidade ou evidencia insuficiente.
 
+Resolucao De Projeto (implementacao provisoria; a responsabilidade definitiva e do Provider, ainda nao extraido neste repositorio):
+
+* Antes de qualquer chamada ao Azure DevOps, resolver o Projeto informado contra `sistema_alm.mapeamento_projeto_logico` do Profile ativo: procurar uma entrada cujo `logico` ou `aliases` corresponda ao valor informado, ignorando acentuacao e caixa; se encontrada, usar o `fisico` dessa entrada em toda chamada ao Azure DevOps a partir daqui e incluir esse Projeto Fisico no contexto consolidado repassado aos especialistas.
+* Se nao houver entrada correspondente no mapeamento, usar o proprio valor informado como identificador do projeto no Azure DevOps.
+* Se esse projeto nao existir no Azure DevOps, interromper e informar explicitamente que o Projeto informado nao foi resolvido, indicando que a correcao e adicionar uma entrada em `mapeamento_projeto_logico` no Profile ativo — nunca perguntar ao usuario qual projeto usar.
+* O Projeto Fisico resolvido e o Contexto Resolvido da execucao e deve ser passado como parametro explicito em toda chamada ao Azure DevOps MCP durante o restante deste fluxo — nunca omitido, nunca deixado em branco para o MCP solicitar interativamente (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido").
+* Esta resolucao e, na arquitetura-alvo do framework, responsabilidade interna do Provider (`docs/CAPABILITY_CONTRACT.md`), nunca do Agente. O procedimento acima e a implementacao provisoria enquanto o Provider formal nao existir; ele migra para o Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003).
+
 Delegue para `qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist` conforme a responsabilidade.
 
 **Sincronizacao Incremental (obrigatoria antes de manter, atualizar ou regenerar um SPEC ja existente):** a existencia previa de um arquivo em `output/` ou de uma pagina na Wiki nunca e, por si so, motivo para manter o SPEC sem alteracao. Antes de decidir, compare o estado atual do Work Item — descricao, criterios de aceite, comentarios relevantes, e Epic, Feature, User Stories, Tasks e Bugs relacionados — contra o documento local existente e a pagina Wiki existente. Classifique cada diferenca encontrada em uma destas categorias:

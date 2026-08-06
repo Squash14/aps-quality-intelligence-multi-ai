@@ -66,21 +66,26 @@ $copilotConfig = Join-Path (Join-Path $HOME ".copilot") "mcp-config.json"
 $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME ".codex" }
 $codexConfig = Join-Path $codexHome "$ProjectProfile.config.toml"
 $claudeConfig = Join-Path $RootDir ".mcp.json"
+$claudeSettings = Join-Path $RootDir ".claude/settings.json"
 
 switch ($Target) {
     "all" {
         Render-Client "Copilot" "clients/copilot/mcp-config.template.json" $copilotConfig
+        node scripts/update-copilot-permissions.mjs $EnvFile $RootDir
         Render-Client "Codex" "clients/codex/config.template.toml" $codexConfig
         Render-Client "Claude" "clients/claude/mcp-config.template.json" $claudeConfig
+        Render-Client "Claude settings" "clients/claude/settings.template.json" $claudeSettings
     }
     "copilot" {
         Render-Client "Copilot" "clients/copilot/mcp-config.template.json" $copilotConfig
+        node scripts/update-copilot-permissions.mjs $EnvFile $RootDir
     }
     "codex" {
         Render-Client "Codex" "clients/codex/config.template.toml" $codexConfig
     }
     "claude" {
         Render-Client "Claude" "clients/claude/mcp-config.template.json" $claudeConfig
+        Render-Client "Claude settings" "clients/claude/settings.template.json" $claudeSettings
     }
     default {
         Write-Host ""
