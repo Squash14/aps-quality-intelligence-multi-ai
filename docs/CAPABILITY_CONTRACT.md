@@ -28,6 +28,18 @@ Este documento nasceu de RFC-0001 (Arquitetura Multi-Provider E Multi-Workspace,
 
 **Invariante herdado:** o escopo de busca e sempre focado no item identificado e em suas relacoes diretas, nunca em um conjunto amplo, salvo fallback controlado e explicito.
 
+### Sincronizar Item De Trabalho
+
+**Objetivo:** criar ou atualizar um Item De Trabalho estrutural (por exemplo, Task ou User Story) vinculado como filho de um Item De Trabalho pai ja identificado — distinto de Criar Defeito, que registra um Defeito verificado, nunca um item estrutural de processo. Diferente de um primitivo de criacao pura, esta Capacidade cobre o ciclo completo de sincronizacao: localizar, reutilizar sem alteracao, criar quando ausente, ou atualizar quando o conteudo controlado enviado divergir do existente — nunca apenas "criar se faltar".
+
+**Entrada Minima:** Projeto + Item De Trabalho pai + tipo do Item De Trabalho a sincronizar + titulo +, quando aplicavel, conteudo controlado a manter sincronizado (delimitado por um marcador explicito).
+
+**Saida Esperada:** Item De Trabalho criado ou atualizado, com identificador e URL navegavel, vinculado hierarquicamente ao pai informado.
+
+**Obrigatoriedade:** Opcional, mas emparelhada com Buscar Item De Trabalho (ver "Regras De Emparelhamento") — nenhum Item De Trabalho estrutural e criado ou atualizado sem antes buscar, entre os itens filhos diretos do pai informado, se um equivalente ja existe.
+
+**Invariante herdado:** nenhum invariante de dominio dedicado hoje; decorrem desta Capacidade, pelo mesmo principio geral de nao-duplicidade ja aplicado a Publicacao e a Criar Defeito em `docs/DOMAIN_CONTRACT.md`: (1) nunca criar um Item De Trabalho estrutural equivalente (mesmo tipo e mesmo titulo normalizado, sob o mesmo pai) quando um ja existir — atualiza-lo em vez disso; (2) quando o Item De Trabalho ja existir e carregar conteudo fora do marcador de conteudo controlado, esse conteudo nunca e sobrescrito — apenas o conteudo dentro do marcador e substituido, e quando o marcador ainda nao existir, o conteudo controlado e inserido preservando integralmente o conteudo anterior. O que constitui "conteudo controlado" para cada uso desta Capacidade e definido pelo Agente que a invoca (hoje, `qa-orchestrator`), nunca pela Capacidade em si.
+
 ### Buscar Documento
 
 **Objetivo:** localizar um Documento ja existente no Repositorio De Documentacao, ou confirmar sua ausencia.
@@ -114,7 +126,7 @@ Este documento nasceu de RFC-0001 (Arquitetura Multi-Provider E Multi-Workspace,
 
 ## Regras De Emparelhamento
 
-`Buscar Documento`/`Publicar Documento` e `Buscar Defeito`/`Criar Defeito` nao podem ser implementadas isoladamente. Os invariantes correspondentes em `docs/DOMAIN_CONTRACT.md` ja exigem a checagem previa ("Publicacao nunca duplica um registro existente", "um Defeito nunca e registrado sem checagem de duplicidade previa") — um Provider que implementasse apenas a metade "criar/publicar" de um par estaria, por construcao, violando esse invariante. A validacao de um Provider (ver `docs/MAINTENANCE.md`, secao "Provider") trata cada par como uma unica unidade indivisivel: ou as duas Capacidades do par existem, ou nenhuma existe.
+`Buscar Documento`/`Publicar Documento`, `Buscar Defeito`/`Criar Defeito` e `Buscar Item De Trabalho`/`Sincronizar Item De Trabalho` nao podem ser implementadas isoladamente. Os invariantes correspondentes em `docs/DOMAIN_CONTRACT.md` ja exigem a checagem previa ("Publicacao nunca duplica um registro existente", "um Defeito nunca e registrado sem checagem de duplicidade previa") — um Provider que implementasse apenas a metade "criar/publicar" de um par estaria, por construcao, violando esse invariante. O mesmo principio se aplica a `Sincronizar Item De Trabalho`: nenhum Item De Trabalho estrutural e criado ou atualizado sem antes buscar, entre os filhos diretos do pai informado, se um equivalente ja existe. A validacao de um Provider (ver `docs/MAINTENANCE.md`, secao "Provider") trata cada par como uma unica unidade indivisivel: ou as duas Capacidades do par existem, ou nenhuma existe.
 
 ## Regra De Degradacao Graciosa
 
@@ -122,7 +134,8 @@ Um Provider que implementa apenas a Capacidade obrigatoria (`Buscar Item De Trab
 
 | Agente | Capacidades Necessarias |
 | --- | --- |
-| `qa-orchestrator`, `qa-bdd-specialist` | Buscar Item De Trabalho (a Publicacao, quando pedida no fluxo, depende adicionalmente do par de Documento) |
+| `qa-bdd-specialist` | Buscar Item De Trabalho |
+| `qa-orchestrator` | Buscar Item De Trabalho (a Publicacao, quando pedida no fluxo, depende adicionalmente do par de Documento; a Estrutura QA Minima Da Feature, quando aplicavel, depende adicionalmente do par Buscar Item De Trabalho/Sincronizar Item De Trabalho) |
 | `qa-wiki-specialist` | Buscar Item De Trabalho + par Buscar Documento/Publicar Documento |
 | `qa-bug-specialist` | Buscar Item De Trabalho + par Buscar Defeito/Criar Defeito; beneficia-se de Obter Sprint, Obter Usuario e Anexar Evidencias sem exigi-los |
 

@@ -20,6 +20,7 @@ Execute o fluxo ponta a ponta:
 7. Repassar arquivo e contexto ao `qa-wiki-specialist`.
 8. Publicar ou atualizar a pagina correta na Wiki.
 9. Arquivar o arquivo local somente apos publicacao bem-sucedida.
+10. Executar Estrutura QA Minima Da Feature (ver secao propria abaixo), sempre, inclusive quando a Sincronizacao Incremental decidir manter o SPEC sem alteracao.
 
 ## Entrada
 
@@ -189,6 +190,40 @@ Se a publicacao falhar:
 * manter o arquivo em `output/`;
 * informar a falha no resultado final.
 
+## Estrutura QA Minima Da Feature
+
+Obrigatoria, ultimo passo do fluxo, sempre executada — inclusive quando a Sincronizacao Incremental decidir manter o SPEC sem alteracao. Apos concluir a sincronizacao da documentacao QA (SPEC, BDD e Wiki), garanta que a estrutura minima de QA da Feature relacionada exista **e esteja sincronizada**, usando a Capacidade `Sincronizar Item De Trabalho` (`docs/CAPABILITY_CONTRACT.md`), emparelhada com `Buscar Item De Trabalho`. Este passo nunca se limita a "criar se faltar" — segue o mesmo principio de sincronizacao incremental ja aplicado ao SPEC: localizar, reutilizar sem alteracao quando ja sincronizado, atualizar quando desatualizado, criar quando ausente.
+
+1. Localizar a Feature relacionada ao Work Item, ja consolidada no contexto coletado. Se nenhuma Feature puder ser identificada, registrar isso no resultado final e nao prosseguir com esta secao.
+2. Localizar, entre as User Stories filhas diretas dessa Feature, a User Story De QA: aquela cujo titulo, normalizado (grafia/acentuacao/caixa), contem o termo "QA" como palavra distinta, ou que possui a Tag "QA".
+   * Zero candidatas: registrar `Nao encontrada` no resultado final e **nao criar a User Story automaticamente nesta versao** — esta secao termina aqui.
+   * Mais de uma candidata: tratar como ambiguidade explicita — registrar todas as candidatas no resultado final, nao escolher nenhuma, nao criar, atualizar nem reutilizar Tasks.
+   * Exatamente uma candidata: usa-la como a User Story De QA desta execucao.
+3. Para cada uma destas tres Tasks — `Planejar os testes`, `Executar os testes`, `Equalizar o ambiente` — localizar entre as Tasks filhas diretas da User Story De QA uma cujo titulo normalizado (grafia/acentuacao/caixa) seja exatamente igual, e decidir entre tres desfechos, nunca apenas "criar se faltar":
+   * **Ausente:** criar uma nova Task com esse titulo exato, vinculada como filha hierarquica da User Story De QA (link `parent`), herdando Area e Iteration da User Story De QA.
+   * **Existente e sincronizada:** quando a Task ja existe e (para `Planejar os testes`) o bloco de conteudo controlado (ver item 4) ja reflete o estado atual da Feature e da Wiki, reutilizar sem nenhuma alteracao.
+   * **Existente mas desatualizada:** quando a Task ja existe mas o bloco de conteudo controlado esta ausente, incompleto (formato de uma versao anterior deste framework) ou o conteudo determinante (Feature/Wiki, ver item 4) diverge do estado atual, atualizar **somente** esse bloco, preservando o restante da descricao (ver item 4). `Executar os testes` e `Equalizar o ambiente` nao tem conteudo controlado definido nesta versao — para elas, o desfecho e sempre `Ausente` (criar) ou `Existente e sincronizada` (reutilizar), nunca `Desatualizada`.
+   * Esta busca previa e obrigatoria a cada execucao, mesmo quando a mesma Task ja foi criada ou sincronizada em uma execucao anterior — executar o `qa-orchestrator` duas ou dez vezes para o mesmo Work Item nunca cria Tasks duplicadas.
+4. A Task `Planejar os testes` carrega um bloco de conteudo controlado pelo framework em sua descricao, delimitado por marcadores explicitos:
+
+```text
+[qa-orchestrator:inicio]
+Documentacao QA (gerado automaticamente pelo qa-orchestrator):
+Feature: <link da Feature>
+Documentacao QA (Wiki/SPEC): <URL da pagina Wiki publicada nesta execucao ou ja existente>
+Ultima sincronizacao: <data/hora UTC, formato ISO 8601 (AAAA-MM-DDThh:mmZ)>
+[qa-orchestrator:fim]
+```
+
+   * O conteudo determinante do bloco e apenas o link da Feature e o link da Wiki/SPEC — sao eles que definem se a Task esta `Existente e sincronizada` ou `Existente mas desatualizada` (item 3). `Ultima sincronizacao` e um metadado de auditoria derivado, nunca um criterio de sincronizacao por si so.
+   * Ao criar o bloco, ou ao atualiza-lo porque o conteudo determinante mudou ou porque o formato estava incompleto (ver item 3), obter a data/hora atual em UTC atraves de um comando ou ferramenta disponivel na sessao e grava-la em `Ultima sincronizacao` — nunca estimar ou inventar esse valor.
+   * Ao reutilizar a Task sem alteracao (`Existente e sincronizada`), preservar o valor de `Ultima sincronizacao` ja existente no bloco — nunca recalcular ou sobrescrever esse campo quando o conteudo determinante nao mudou, para que ele reflita genuinamente a ultima sincronizacao real, nao a ultima verificacao.
+   * Ao criar a Task, inserir este bloco como toda a descricao inicial.
+   * Ao atualizar uma Task existente cuja descricao ja contem os marcadores, substituir **apenas** o conteudo entre `[qa-orchestrator:inicio]` e `[qa-orchestrator:fim]` — nunca tocar em nada fora dos marcadores.
+   * Ao atualizar uma Task existente cuja descricao **nao** contem os marcadores (criada manualmente antes desta versao, ou por outra pessoa), inserir o bloco no topo da descricao, seguido de uma linha em branco, **preservando integralmente** o conteudo existente abaixo — nunca sobrescrever ou remover texto manual.
+   * Se a URL da Wiki nao estiver disponivel nesta execucao (publicacao pendente ou com falha) e ja existir um link valido de uma sincronizacao anterior dentro do bloco, preservar esse link anterior — nunca substituir um link valido por uma pendencia. Se nao existir nenhum link valido ainda, usar `Documentacao QA (Wiki/SPEC): publicacao pendente (ver Resultado)` e reportar essa pendencia explicitamente no resultado final.
+5. Incluir no resultado final a secao `Estrutura QA` (ver "## Resultado Final" abaixo), sempre — inclusive quando a User Story De QA nao for encontrada.
+
 ## Saida Durante Execucao
 
 Nao exibir raciocinio interno, hipoteses, estrategia, chamadas MCP ou decisoes intermediarias.
@@ -231,6 +266,15 @@ Acao executada:
 Resultado:
 URL da pagina:
 Arquivo local:
+
+Estrutura QA:
+
+User Story QA:
+Tasks:
+- Planejar os testes:
+- Executar os testes:
+- Equalizar o ambiente:
+Links das Tasks criadas:
 ```
 
 Para `Decisao SPEC`, usar uma destas opcoes:
@@ -250,6 +294,21 @@ Para `Arquivo local`, indicar:
 * `Movido para output/delete/`
 * `Preservado em output/ devido a falha`
 
+Para `User Story QA`, usar uma destas opcoes:
+
+* `Encontrada (ID, Titulo, URL)`
+* `Nao encontrada`
+* `Ambigua (candidatas: ...)`
+
+Para cada Task em `Tasks`, usar uma destas opcoes:
+
+* `Existente (ID, URL)` — ja existia e ja estava sincronizada, reutilizada sem alteracao.
+* `Atualizada (ID, URL)` — ja existia mas o conteudo controlado estava desatualizado ou ausente, sincronizado nesta execucao.
+* `Criada (ID, URL)`
+* `Nao aplicavel (User Story QA nao encontrada ou ambigua)`
+
+Para `Links das Tasks criadas`, listar a URL de cada Task criada nesta execucao, ou `Nenhuma Task criada nesta execucao`.
+
 ## Validacao Final
 
 Antes de encerrar, verificar:
@@ -263,6 +322,11 @@ Antes de encerrar, verificar:
 * destino Wiki identificado;
 * pagina criada ou atualizada;
 * URL disponivel quando a publicacao for concluida;
-* arquivo local arquivado apenas apos sucesso.
+* arquivo local arquivado apenas apos sucesso;
+* Estrutura QA Minima Da Feature executada em toda chamada, mesmo quando o SPEC foi mantido sem alteracao;
+* User Story De QA localizada, ausente ou ambigua, sempre reportada de forma explicita;
+* as tres Tasks (`Planejar os testes`, `Executar os testes`, `Equalizar o ambiente`) localizadas antes de qualquer criacao ou atualizacao, nunca duplicadas entre execucoes;
+* Task `Planejar os testes`, quando criada ou atualizada, com o bloco de conteudo controlado (Feature, Wiki/SPEC, nota de geracao automatica) sincronizado dentro dos marcadores;
+* conteudo fora do bloco controlado da Task `Planejar os testes` sempre preservado, nunca sobrescrito.
 
 Somente finalize quando o fluxo estiver concluido ou quando houver bloqueio real de MCP, permissao ou informacao indisponivel.

@@ -361,6 +361,15 @@ Ação executada:
 Resultado:
 URL da página:
 Arquivo local:
+
+Estrutura QA:
+
+User Story QA:
+Tasks:
+- Planejar os testes:
+- Executar os testes:
+- Equalizar o ambiente:
+Links das Tasks criadas:
 ```
 
 Para `Decisão SPEC`, esperado:
@@ -387,6 +396,8 @@ Para `Arquivo local`, esperado:
 Movido para output/delete/
 Preservado em output/ devido a falha
 ```
+
+Após sincronizar SPEC/BDD/Wiki (mesmo quando `Decisão SPEC` for `Mantido sem alterações`), o `qa-orchestrator` garante a estrutura mínima de QA da Feature relacionada **e a mantém sincronizada** — nunca apenas "cria se faltar": localiza a User Story de QA filha direta da Feature (título contendo "QA" ou Tag "QA") e, quando encontrada, para cada uma das três Tasks fixas — `Planejar os testes`, `Executar os testes`, `Equalizar o ambiente` — decide entre reutilizar (já existe e já está sincronizada), atualizar (já existe mas está desatualizada) ou criar (ausente), sempre buscando antes de agir, nunca duplicando entre execuções. A Task `Planejar os testes` carrega um bloco de conteúdo controlado pelo framework (link da Feature, link da Wiki/SPEC, data/hora `Última sincronização` e nota de geração automática), delimitado por marcadores; ao criar ou atualizar, apenas esse bloco é escrito — qualquer conteúdo manual do QA fora dele é sempre preservado, nunca sobrescrito. `Última sincronização` só avança quando o bloco é criado ou quando Feature/Wiki realmente mudam — nunca a cada execução em que a Task é apenas reutilizada — para que reflita a última sincronização real, útil para auditoria sem precisar consultar histórico. Quando a User Story de QA não é encontrada, o agente reporta isso e **não a cria automaticamente** nesta versão; quando há mais de uma candidata, reporta a ambiguidade sem escolher nenhuma.
 
 ## Validação De Manutenção
 
