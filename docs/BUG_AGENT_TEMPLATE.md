@@ -73,6 +73,10 @@ O agente deve:
 * nao perguntar novamente Projeto, Item De Trabalho Relacionado, Ambiente ou Tipo Do Work Item quando ja informados;
 * apos criar um Bug novo nesta execucao (nunca quando um Bug existente e localizado por duplicidade), executar as acoes declaradas em `acoes_por_evento.apos_criar_defeito` no Profile ativo e reportar cada uma no resultado final.
 
+## Analise Enriquecida No Resultado
+
+Quando o agente cria um Bug novo (nunca quando localiza um Bug existente por duplicidade), o resultado final inclui tambem uma analise informativa — nenhum campo de entrada novo, apenas achados derivados do que ja foi informado e do que o agente ja consulta no Azure DevOps: `Indicios De Regressao`, `Possivel Impacto Funcional`, `Modulo Ou Componente Afetado`, `Riscos QA Relacionados`, `Bugs Semelhantes` (mesmo com titulo diferente do Bug criado — sempre presente, com `Nenhum Bug semelhante encontrado` quando aplicavel), `Dependencias Funcionais Afetadas` e `Validacoes Recomendadas` (lista curta em linguagem natural, nunca formato Gherkin/BDD). Cada item aparece apenas quando houver evidencia suficiente — nunca por suposicao. Um bloco `Confiabilidade Da Analise` (`Alta`, `Media` ou `Baixa`, nunca um numero) fecha a analise, refletindo apenas a quantidade e qualidade da evidencia usada. Ver `agents/qa-bug-specialist.md` ("Analise Enriquecida Antes Da Criacao") e `docs/DECISIONS.md` (DEC-0012) para a especificacao completa.
+
 ## Profile Do Workspace Apsen/Arquitetura
 
 Os valores e aliases especificos deste workspace (tipos de defeito aceitos, causas aceitas, nomes de campo customizado, politica de responsavel e de evidencias) vivem em `profiles/apsen-arquitetura/profile.json` — nao mais no texto do agente. Consulte esse arquivo como fonte de verdade; ele e a referencia usada pelo agente para normalizar os campos de decisao de negocio.

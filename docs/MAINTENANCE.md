@@ -109,24 +109,13 @@ Existem hoje **dois fluxos validos** para alterar um agente, dependendo se ele j
 
 ### Agente com fonte canonica (`agents/<nome>.md` existe)
 
-Hoje: `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`, `qa-health-specialist`.
+Hoje: todos os cinco agentes — `qa-orchestrator`, `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`, `qa-health-specialist`. Nenhum agente deste framework depende mais de manutencao manual multi-cliente (`qa-orchestrator` migrou em DEC-0011, fechando a Etapa 3 do plano de migracao de DEC-0003).
 
 1. Edite apenas `agents/<nome>.md` (secoes `## Comportamento Compartilhado` e `## Particularidades Por Cliente`).
 2. Rode `node scripts/render-agents.mjs agents/<nome>.md` para regenerar `.claude/agents/`, `.codex/agents/` e `.github/agents/`.
 3. Nunca edite os tres arquivos gerados diretamente — a proxima regeneracao sobrescreve qualquer edicao manual sem aviso.
 4. Execute `./scripts/check.sh` (valida, entre outras coisas, que os gerados batem com a fonte via `render-agents.mjs --check-all`).
-5. Valide com um Work Item real antes de compartilhar com o time. Para `qa-bug-specialist`, use a suite de regressao em `docs/BUG_AGENT_VALIDATION.md` — rode os cenarios afetados pela mudanca, e todos os dez antes de uma mudanca estrutural.
-
-### Agente ainda sem fonte canonica (`agents/<nome>.md` nao existe)
-
-Hoje: `qa-orchestrator`. Este agente ja divergiu de forma real entre clientes porque depende inteiramente de disciplina manual — ver `docs/AGENT_PARITY.md` para o estado atual dessa divergencia.
-
-1. Leia o arquivo do agente afetado nos tres clientes antes de editar, para entender se ja existe divergencia previa.
-2. Atualize os tres formatos manualmente: `.github/agents`, `.codex/agents` e `.claude/agents`, com o mesmo comportamento funcional.
-3. Preserve o formato publico de entrada.
-4. Execute `./scripts/check.sh` — hoje ele so confirma presenca de arquivo e de conceitos-chave (`scripts/validate-agent-assets.mjs`), **nao** equivalencia semantica completa entre os tres arquivos. Passar no check nao garante paridade real para esses dois agentes.
-5. Valide com um Work Item real em pelo menos dois clientes antes de compartilhar com o time.
-6. Ao terminar, considere migrar o agente para fonte canonica (`agents/<nome>.md`) seguindo o padrao de `qa-bug-specialist`/`qa-wiki-specialist`, para que o proximo check cubra esse agente por completo.
+5. Valide com um Work Item real antes de compartilhar com o time. Para `qa-bug-specialist`, use a suite de regressao em `docs/BUG_AGENT_VALIDATION.md` — rode os cenarios afetados pela mudanca, e todos os onze antes de uma mudanca estrutural.
 
 ### Provider (planejado — Fase 2, ver `docs/DECISIONS.md` DEC-0003)
 
@@ -173,7 +162,7 @@ No Windows, use tambem:
 .\scripts\check.ps1
 ```
 
-Ambos os checks rodam automaticamente em `push`/`pull_request` via `.github/workflows/check.yml` (ver `docs/DECISIONS.md`, DEC-0002). Isso reduz — mas nao elimina — a chance de divergencia passar despercebida: para agentes sem fonte canonica, o CI so pega ausencia de arquivo ou de conceito-chave, nao diferenca de comportamento linha a linha. Nenhum dos dois checks substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
+Ambos os checks rodam automaticamente em `push`/`pull_request` via `.github/workflows/check.yml` (ver `docs/DECISIONS.md`, DEC-0002). Como todos os agentes ja tem fonte canonica (`docs/AGENT_PARITY.md`), `render-agents.mjs --check-all` garante paridade byte a byte entre os tres clientes para todos eles. Nenhum dos dois checks substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
 
 Antes de alterar scripts de setup:
 
@@ -199,8 +188,7 @@ Checklist de PR:
 * Nomes dos agentes batem com os arquivos em `.github/agents/`.
 * Agentes equivalentes existem em `.codex/agents/` e `.claude/agents/`.
 * Conceitos obrigatorios dos agentes passam em `scripts/validate-agent-assets.mjs`.
-* Se o agente tem fonte canonica em `agents/`, ela foi editada e `node scripts/render-agents.mjs agents/<nome>.md` foi rodado (nunca editar os tres gerados direto).
-* Se o agente ainda nao tem fonte canonica, os tres arquivos foram revisados lado a lado para o mesmo comportamento — o check automatizado nao garante isso para esses agentes.
+* A fonte canonica em `agents/<nome>.md` foi editada e `node scripts/render-agents.mjs agents/<nome>.md` foi rodado (nunca editar os tres gerados direto).
 * Scripts de setup e validacao continuam alinhados com os docs.
 * Um fluxo com Work Item real foi verificado quando houve mudanca de comportamento dos agentes.
 * Se o Gate De Preparacao De Ambiente foi alterado, a mudanca foi feita apenas em `docs/DOMAIN_CONTRACT.md` — nenhum agente recebeu logica reescrita ou parafraseada do Gate, apenas a referencia curta ja existente.

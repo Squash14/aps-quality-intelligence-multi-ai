@@ -126,7 +126,7 @@ Checklist:
 
 Use quando houver mudanca no `qa-bug-specialist`, em um Profile que ele consome (`profiles/<nome>/profile.json`) ou no template de Bug. Evite criar Bugs artificiais; prefira um defeito real de QA quando possivel.
 
-A suite de regressao completa deste agente — dez cenarios fixos (Bug novo, duplicidade, Task filha, resolucao de Projeto, resolucao de Sprint, descricao completa, campos do processo, evidencias, vinculacao a Feature, resumo final), cada um com objetivo, entrada, comportamento esperado e criterios de aprovacao — vive em [BUG_AGENT_VALIDATION.md](BUG_AGENT_VALIDATION.md). Rode os cenarios afetados pela mudanca antes de compartilhar com o time; rode todos antes de uma mudanca estrutural (Gate, mecanismo de Profile, template de Resultado Final).
+A suite de regressao completa deste agente — onze cenarios fixos (Bug novo, duplicidade, Task filha, resolucao de Projeto, resolucao de Sprint, descricao completa, campos do processo, evidencias, vinculacao a Feature, resumo final, Analise Enriquecida antes da criacao), cada um com objetivo, entrada, comportamento esperado e criterios de aprovacao — vive em [BUG_AGENT_VALIDATION.md](BUG_AGENT_VALIDATION.md). Rode os cenarios afetados pela mudanca antes de compartilhar com o time; rode todos antes de uma mudanca estrutural (Gate, mecanismo de Profile, template de Resultado Final).
 
 Entrada recomendada para um cenario avulso:
 

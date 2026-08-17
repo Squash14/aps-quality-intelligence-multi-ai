@@ -387,6 +387,13 @@ Tasks:
 - Executar os testes:
 - Equalizar o ambiente:
 Links das Tasks criadas:
+
+Decisao De Delegacao:
+- qa-bdd-specialist: <Executado | Nao Executado> - <motivo>
+- qa-wiki-specialist: <Executado | Nao Executado> - <motivo>
+- qa-bug-specialist: <Executado | Nao Executado> - <motivo>
+
+Resumo Do Fluxo:
 ```
 
 Para `Decisão SPEC`, esperado:
@@ -415,6 +422,99 @@ Preservado em output/ devido a falha
 ```
 
 Após sincronizar SPEC/BDD/Wiki (mesmo quando `Decisão SPEC` for `Mantido sem alterações`), o `qa-orchestrator` garante a estrutura mínima de QA da Feature relacionada **e a mantém sincronizada** — nunca apenas "cria se faltar": localiza a User Story de QA filha direta da Feature (título contendo "QA" ou Tag "QA") e, quando encontrada, para cada uma das três Tasks fixas — `Planejar os testes`, `Executar os testes`, `Equalizar o ambiente` — decide entre reutilizar (já existe e já está sincronizada), atualizar (já existe mas está desatualizada) ou criar (ausente), sempre buscando antes de agir, nunca duplicando entre execuções. A Task `Planejar os testes` carrega um bloco de conteúdo controlado pelo framework (link da Feature, link da Wiki/SPEC, data/hora `Última sincronização` e nota de geração automática), delimitado por marcadores; ao criar ou atualizar, apenas esse bloco é escrito — qualquer conteúdo manual do QA fora dele é sempre preservado, nunca sobrescrito. `Última sincronização` só avança quando o bloco é criado ou quando Feature/Wiki realmente mudam — nunca a cada execução em que a Task é apenas reutilizada — para que reflita a última sincronização real, útil para auditoria sem precisar consultar histórico. Quando a User Story de QA não é encontrada, o agente reporta isso e **não a cria automaticamente** nesta versão; quando há mais de uma candidata, reporta a ambiguidade sem escolher nenhuma.
+
+`Decisão De Delegação` reporta, sempre, os três especialistas que o `qa-orchestrator` pode chamar (`qa-bdd-specialist`, `qa-wiki-specialist`, `qa-bug-specialist`), cada um como `Executado` ou `Não Executado` com o motivo objetivo da decisão — o `qa-orchestrator` evita chamadas desnecessárias reaproveitando evidência já coletada no próprio fluxo (a classificação da Sincronização Incremental, e a página Wiki/tipo do Work Item já localizados), nunca fazendo uma chamada MCP nova só para decidir. Por exemplo: quando a Sincronização Incremental classifica todas as diferenças como `Sem impacto documental` e já existe uma página Wiki válida, nem `qa-bdd-specialist` nem `qa-wiki-specialist` são chamados nessa execução — a URL já conhecida é reutilizada diretamente no resultado. `qa-bug-specialist` só é chamado quando o tipo do Work Item for Bug ou o pedido mencionar defeito explicitamente. `Resumo Do Fluxo` fecha o resultado com 1 a 2 frases resumindo quantos especialistas foram executados nesta chamada.
+
+## qa-health-specialist
+
+Especialista de diagnóstico e auditoria QA **estritamente somente leitura** — nunca cria, atualiza, sincroniza ou publica nada no Azure DevOps, na Wiki ou em arquivos do projeto. Totalmente independente do `qa-orchestrator`: pode ser chamado a qualquer momento, sem depender do fluxo completo.
+
+**Objetivo:** dado um Epic, Feature, User Story ou outro Item De Trabalho, descobrir a hierarquia relacionada e produzir um diagnóstico QA consolidado — hierarquia, Fluxo QA Observado, Estrutura QA, Wiki, Bugs relacionados, cobertura QA, riscos, gaps, inconsistências, Pendências Encontradas, Situação QA e Maturidade QA — sem alterar nada.
+
+**Quando usar:**
+
+* Para saber rapidamente "como está a estrutura QA desta Feature/Epic?" antes de decidir o que fazer.
+* Para auditar um Epic inteiro e priorizar em quais Features investir primeiro.
+* Como checagem prévia antes de rodar `qa-orchestrator`, `qa-bdd-specialist` ou `qa-wiki-specialist`, para saber o que já existe e o que falta.
+
+**Quando não usar:**
+
+* Para criar, publicar ou atualizar Wiki, SPEC, Bugs ou a Estrutura QA mínima — este agente nunca escreve nada; use `qa-orchestrator`, `qa-wiki-specialist`, `qa-bdd-specialist` ou `qa-bug-specialist` para isso.
+* Para gerar SPEC, cenários BDD ou análise de regra de negócio — isso é `qa-bdd-specialist`.
+* Para auditoria estrutural detalhada da Wiki (páginas órfãs, duplicadas, fora do padrão) — isso é `qa-wiki-specialist`.
+* Como Ponto De Entrada, Projeto, Sprint ou Backlog inteiros não são suportados nesta versão — apenas Epic, Feature, User Story ou outro Item De Trabalho, sempre com o Projeto.
+
+**Entradas aceitas:** `<Projeto> <IdentificadorDoItem>`, onde o item é um Epic, Feature, User Story ou outro Item De Trabalho (Task, Bug etc. — o agente sobe até a Feature ancestral mais próxima).
+
+Exemplos de prompts:
+
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
+```text
+Use o agente qa-health-specialist para auditar o Epic 9900 do projeto PPDS, sem alterar nada.
+```
+
+```text
+Use o agente qa-health-specialist para verificar a Estrutura QA e a Wiki da User Story 12399 do projeto Backoffice.
+```
+
+Exemplo resumido do relatório esperado:
+
+```text
+# DIAGNOSTICO QA
+
+## Resumo Executivo
+Projeto: Backoffice
+Item Analisado: Epic 9900 - Onboarding
+Features: 6
+Features Com Estrutura QA Completa: 1 de 6
+...
+Situacao QA: Parcial
+Maturidade QA: Basica
+
+Conclusao:
+Estrutura funcional parcialmente consolidada. A estrutura QA, no entanto,
+esta classificada como basica. A principal recomendacao e Criar User Story
+De QA antes de evoluir as demais dimensoes.
+
+## Acoes Rapidas
+🔴 Criar User Story De QA (5 Features)
+🔴 Criar Wiki (6 Features)
+...
+
+## Maturidade QA
+Classificacao: Basica
+Base Da Maturidade QA: Estrutura QA: 🔴 | Wiki: 🔴 | Documentacao: 🟡 | Bugs: ⚪
+
+## Padrao Global Encontrado
+Wiki ausente; User Story De QA ausente — presente em 5 de 6 Features (100,
+101, 104, 108, 112).
+
+## Visao Por Feature
+### Feature 100 - Cadastro De Usuario
+...
+Artefatos QA:
+- Documentacao QA: Nao encontrada
+- Wiki: Nao encontrada
+Pendencias Principais:
+- Segue o Padrao Global Encontrado (ver secao acima)
+...
+
+## Priorizacao - Proximas Acoes Sugeridas
+### Prioridade Alta
+- Criar Wiki (6 Features: 100, 101, 104, 108, 112, 115)
+- Criar User Story De QA (5 Features: 100, 101, 104, 108, 112)
+...
+
+## Conclusao QA
+Estrutura funcional parcialmente consolidada. A estrutura QA, no entanto,
+esta classificada como basica. A principal recomendacao e Criar User Story
+De QA antes de evoluir as demais dimensoes.
+```
+
+Especificação completa (Responsabilidade, Limites, Estratégia De Descoberta, Determinismo, Situação QA, Maturidade QA, Padrão Global De Pendências, Semáforo e o Relatório completo): `agents/qa-health-specialist.md`.
 
 ## Validação De Manutenção
 
@@ -456,8 +556,8 @@ aps-quality-intelligence-multi-ai/
 ├── CLAUDE.md
 ├── .env.example
 ├── agents/
-│   └── fonte canonica de qa-bdd-specialist, qa-bug-specialist, qa-wiki-specialist
-│       e qa-health-specialist; qa-orchestrator ainda nao tem fonte canonica
+│   └── fonte canonica dos cinco agentes (qa-orchestrator, qa-bdd-specialist,
+│       qa-bug-specialist, qa-wiki-specialist, qa-health-specialist)
 │       (ver docs/AGENT_PARITY.md)
 ├── clients/
 │   ├── copilot/
