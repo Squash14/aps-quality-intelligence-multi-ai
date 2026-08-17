@@ -138,6 +138,7 @@ Um Provider que implementa apenas a Capacidade obrigatoria (`Buscar Item De Trab
 | `qa-orchestrator` | Buscar Item De Trabalho (a Publicacao, quando pedida no fluxo, depende adicionalmente do par de Documento; a Estrutura QA Minima Da Feature, quando aplicavel, depende adicionalmente do par Buscar Item De Trabalho/Sincronizar Item De Trabalho) |
 | `qa-wiki-specialist` | Buscar Item De Trabalho + par Buscar Documento/Publicar Documento |
 | `qa-bug-specialist` | Buscar Item De Trabalho + par Buscar Defeito/Criar Defeito; beneficia-se de Obter Sprint, Obter Usuario e Anexar Evidencias sem exigi-los |
+| `qa-health-specialist` | Buscar Item De Trabalho; beneficia-se de Buscar Documento e Buscar Defeito sem exigi-los. Nunca depende de nenhuma Capacidade de escrita (Sincronizar Item De Trabalho, Publicar Documento, Criar Defeito, Anexar Evidencias, Obter Usuario) — este Agente opera em modo estritamente somente leitura. |
 
 Quando um agente for solicitado sobre um Provider que nao implementa a Capacidade necessaria, a resposta esperada e explicita ("este Provider nao implementa Criar Defeito/Buscar Defeito"), nunca uma tentativa silenciosa ou um erro generico.
 

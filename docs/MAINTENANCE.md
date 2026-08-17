@@ -91,6 +91,7 @@ Se um adaptador de cliente futuro (novo cliente de IA) usar o mesmo padrao de co
 | `qa-bdd-specialist` | SPEC, cenarios BDD, riscos, gaps e cobertura QA. |
 | `qa-wiki-specialist` | Destino, auditoria, atualizacao e publicacao na Wiki. |
 | `qa-bug-specialist` | Analise de defeitos e criacao de Bug no Azure DevOps. |
+| `qa-health-specialist` | Diagnostico e auditoria QA somente leitura (Epic, Feature, User Story ou Item De Trabalho), sem nunca alterar nada. Totalmente independente, chamavel diretamente sem passar por `qa-orchestrator`. |
 
 Regras de fronteira:
 
@@ -98,6 +99,7 @@ Regras de fronteira:
 * `qa-bdd-specialist` gera conteudo funcional e arquivo local, mas nao publica na Wiki.
 * `qa-wiki-specialist` decide destino e publica, mas nao inventa regra funcional.
 * `qa-bug-specialist` atua somente quando o pedido envolver defeito.
+* `qa-health-specialist` diagnostica e reporta, mas nunca escreve — nunca cria, atualiza, sincroniza ou publica nada no Azure DevOps, na Wiki ou em arquivos do projeto; a checagem de Wiki fica limitada a existencia (nunca substitui a auditoria estrutural de `qa-wiki-specialist`) e a checagem de Estrutura QA fica limitada a leitura (nunca substitui a criacao/sincronizacao de `qa-orchestrator`).
 * Especialistas devem reutilizar contexto recebido e evitar novas chamadas MCP quando os dados ja forem suficientes.
 * Todo agente — incluindo os tres especialistas, que podem ser chamados diretamente pelo usuario sem passar por `qa-orchestrator` (ver `docs/USAGE.md`) — executa o Gate De Preparacao De Ambiente (`docs/DOMAIN_CONTRACT.md`) como primeiro passo do proprio fluxo, antes de ler documentacao adicional, consultar o Item De Trabalho ou delegar. Ver `docs/DECISIONS.md`, DEC-0006.
 
@@ -107,7 +109,7 @@ Existem hoje **dois fluxos validos** para alterar um agente, dependendo se ele j
 
 ### Agente com fonte canonica (`agents/<nome>.md` existe)
 
-Hoje: `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`.
+Hoje: `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`, `qa-health-specialist`.
 
 1. Edite apenas `agents/<nome>.md` (secoes `## Comportamento Compartilhado` e `## Particularidades Por Cliente`).
 2. Rode `node scripts/render-agents.mjs agents/<nome>.md` para regenerar `.claude/agents/`, `.codex/agents/` e `.github/agents/`.

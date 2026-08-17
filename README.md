@@ -47,8 +47,9 @@ Agentes disponíveis nos três clientes:
 | `qa-bdd-specialist` | Gerar ou revisar SPEC funcional e cenários BDD de forma especializada, sem publicar na Wiki. | Projeto, Work Item ou contexto funcional. |
 | `qa-wiki-specialist` | Publicar, atualizar, organizar e prevenir duplicidade de páginas na Wiki — auditoria, localização, criação e atualização. | Projeto, Work Item, arquivo/conteúdo e intenção de leitura ou publicação. |
 | `qa-bug-specialist` | Criar e manter Bugs no Azure DevOps: checagem de duplicidade, vínculos e ações pós-criação. | Use o template em `docs/BUG_AGENT_TEMPLATE.md`. |
+| `qa-health-specialist` | Diagnóstico e auditoria QA somente leitura — hierarquia, Estrutura QA, Wiki, Bugs, cobertura, riscos, gaps e Situação QA, sem alterar nada. Totalmente independente do `qa-orchestrator`. | Projeto e um Epic, Feature, User Story ou Item De Trabalho. |
 
-Escolha o especialista diretamente (`qa-bdd-specialist`, `qa-wiki-specialist` ou `qa-bug-specialist`) quando o objetivo já for conhecido — por exemplo, só gerar SPEC/BDD, só validar/publicar Wiki, ou só criar um Bug. Use `qa-orchestrator` quando for necessário coordenar o fluxo completo, do Work Item até a publicação.
+Escolha o especialista diretamente (`qa-bdd-specialist`, `qa-wiki-specialist`, `qa-bug-specialist` ou `qa-health-specialist`) quando o objetivo já for conhecido — por exemplo, só gerar SPEC/BDD, só validar/publicar Wiki, só criar um Bug, ou só diagnosticar o estado de QA sem alterar nada. Use `qa-orchestrator` quando for necessário coordenar o fluxo completo, do Work Item até a publicação.
 
 ## Pré-Requisitos
 
@@ -161,6 +162,12 @@ Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLAT
 
 Template completo: [docs/BUG_AGENT_TEMPLATE.md](docs/BUG_AGENT_TEMPLATE.md).
 
+Para diagnóstico QA somente leitura:
+
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
 Validar MCP no Codex, antes de pedir qualquer agente:
 
 ```bash
@@ -225,6 +232,12 @@ qa-bug-specialist
 Projeto Backoffice. Defeito: <descrição do defeito>.
 ```
 
+```text
+/agent
+qa-health-specialist
+Diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
 > **Nota:** o `setup-mcp.sh copilot` pré-aprova automaticamente todas as ferramentas do servidor MCP `ado` para este diretório via `~/.copilot/permissions-config.json`. Não é necessário executar `/allow-all` a cada sessão após o setup.
 
 > **Opcional:** `/caveman Ultra` ativa respostas mais curtas (economia de tokens). Não é requisito para executar os agentes.
@@ -287,6 +300,10 @@ Use o agente qa-wiki-specialist para validar o destino Wiki do Work Item Backoff
 
 ```text
 Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLATE.md.
+```
+
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
 ```
 
 Validar MCP no Claude:
@@ -439,8 +456,9 @@ aps-quality-intelligence-multi-ai/
 ├── CLAUDE.md
 ├── .env.example
 ├── agents/
-│   └── fonte canonica de qa-bdd-specialist, qa-bug-specialist e qa-wiki-specialist;
-│       qa-orchestrator ainda nao tem fonte canonica (ver docs/AGENT_PARITY.md)
+│   └── fonte canonica de qa-bdd-specialist, qa-bug-specialist, qa-wiki-specialist
+│       e qa-health-specialist; qa-orchestrator ainda nao tem fonte canonica
+│       (ver docs/AGENT_PARITY.md)
 ├── clients/
 │   ├── copilot/
 │   ├── codex/

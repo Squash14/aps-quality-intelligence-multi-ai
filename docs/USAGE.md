@@ -62,3 +62,13 @@ O agente deve:
 * criar o Bug;
 * vincular parent quando informado;
 * retornar URL.
+
+## Diagnóstico QA (somente leitura)
+
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
+Ponto de entrada aceito nesta versão: Epic, Feature, User Story ou outro Item de Trabalho — sempre acompanhado do Projeto. Projeto, Sprint e Backlog como ponto de entrada ainda não são suportados; o agente informa isso explicitamente em vez de adivinhar.
+
+Totalmente independente: pode ser chamado diretamente, sem nunca depender do `qa-orchestrator`. Nunca cria, atualiza, sincroniza ou publica nada — descobre a hierarquia relacionada (Features, User Stories, Tasks, Bugs, Wiki) e produz um relatório único `# DIAGNÓSTICO QA` com hierarquia encontrada, Fluxo QA Observado, Estrutura QA, Wiki, Bugs, cobertura, riscos, gaps, Pendências Encontradas, Oportunidades De Melhoria, Situação QA (`Estruturado`, `Parcial` ou `Insuficiente Para Avaliação`, sem score nem peso) e Próximas Ações Sugeridas. Toda informação não determinável é reportada com o motivo (permissão insuficiente, ausência de relação declarada, limitação da capacidade, informação inexistente ou ambiguidade não resolvida).

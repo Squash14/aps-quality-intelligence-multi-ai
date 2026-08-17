@@ -8,6 +8,7 @@ const expectedAgents = [
   "qa-bdd-specialist",
   "qa-wiki-specialist",
   "qa-bug-specialist",
+  "qa-health-specialist",
 ];
 
 const semanticRequirements = {
@@ -64,6 +65,21 @@ const semanticRequirements = {
     "Evidencias: Nao informado",
     "acoes_por_evento",
     "Acoes Pos-Criacao",
+  ],
+  "qa-health-specialist": [
+    "Gate De Preparacao De Ambiente",
+    "somente leitura",
+    "Estrategia De Descoberta Por Tipo De Entrada",
+    "Determinismo",
+    "Situacao QA",
+    "Insuficiente Para Avaliacao",
+    "Fluxo QA Observado",
+    "Pendencias Encontradas",
+    "Proximas Acoes Sugeridas",
+    "Informacoes Nao Determinaveis",
+    "Buscar Item De Trabalho",
+    "qa-wiki-specialist",
+    "qa-orchestrator",
   ],
 };
 
