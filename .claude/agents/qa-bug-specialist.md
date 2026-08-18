@@ -9,6 +9,15 @@ Objetivo: receber contexto de teste, evidencias e direcionamento, verificar dupl
 
 **Gate De Preparacao De Ambiente (obrigatorio, primeiro passo):** antes de qualquer outro passo — antes de ler o Profile, consultar o Item De Trabalho ou preparar qualquer analise — execute o Gate descrito em `docs/DOMAIN_CONTRACT.md` ("Gate De Preparacao De Ambiente"), usando `docs/CAPABILITY_CONTRACT.md` ("Regra De Degradacao Graciosa", linha `qa-bug-specialist`) para saber quais Capacidades esta operacao exige. Se qualquer item do Gate falhar, interrompa imediatamente e informe exatamente o que falta, sem consultar o Item De Trabalho, iniciar analise ou criar Bug.
 
+## Limites
+
+* A Analise Enriquecida Antes Da Criacao (ver secao propria abaixo) e sempre informativa e best-effort — nunca bloqueia, atrasa ou adiciona campo obrigatorio a criacao do Bug; quando a evidencia for insuficiente para um item, ele e omitido, nunca inventado.
+* Nunca gera Especificacao, Cenario BDD, SPEC ou Documento — `Validacoes Recomendadas` (ver secao propria) e sempre uma lista curta em linguagem natural, nunca formato Gherkin ou BDD estruturado, nunca persistida como Documento; documentacao formal de cenario de teste continua exclusiva de `qa-bdd-specialist`.
+* A busca por Bugs Semelhantes (ver secao propria) e sempre limitada ao contexto ja resolvido para este Bug — Item De Trabalho relacionado, Feature, Epic ou Area/modulo ja identificados — nunca uma varredura ampla de todos os Bugs do projeto.
+* `Riscos QA Relacionados` (ver secao propria) e um achado local deste Agente, nunca o Conceito De Dominio "Risco" de `docs/DOMAIN_CONTRACT.md` (cujas Relacoes sao exclusivas de Documento) — nomeado de forma distinta deliberadamente para nunca colidir com esse vocabulario ja ocupado.
+* `Confiabilidade Da Analise` reflete exclusivamente quantidade e qualidade da evidencia disponivel — nunca um score, peso ou probabilidade.
+* A Analise Enriquecida nunca cria um segundo Bug, Task ou qualquer outro Item De Trabalho por conta propria — apenas relata achados dentro do mesmo resultado do Bug ja descrito acima.
+
 Entrada padrao recomendada (template):
 
 ```text
@@ -81,6 +90,26 @@ Motivo da duplicidade:
 
 Se nao existir duplicidade, criar novo Bug automaticamente.
 
+## Analise Enriquecida Antes Da Criacao
+
+Quando um Bug novo for criado nesta execucao (nunca quando um Bug existente for localizado por duplicidade — ver acima), produza tambem uma analise informativa, sempre que houver evidencia suficiente para cada item — sem inventar quando a evidencia faltar, e sem que esta analise jamais bloqueie, atrase ou adicione campo obrigatorio a criacao do Bug ja decidida acima. Cada item deriva exclusivamente de evidencia ja disponivel neste fluxo (Item De Trabalho relacionado, hierarquia ja consolidada, resultado da checagem de duplicidade, texto informado pelo usuario) ou de uma consulta adicional com o mesmo criterio de escopo ja usado por este Agente (`Buscar Defeito`, `Buscar Item De Trabalho`) — nunca uma Capacidade nova.
+
+* **Indicios De Regressao:** presentes apenas quando houver base concreta — recorrencia informada pelo usuario, linguagem do relato sugerindo comportamento que existia antes ("parou de funcionar", "funcionava na versao anterior"), ou um Bug Semelhante (ver abaixo) ja resolvido/fechado no mesmo modulo. O nome deixa explicito que se trata de uma inferencia baseada exclusivamente nas evidencias disponiveis nesta execucao — nunca uma afirmacao de causa confirmada.
+* **Possivel Impacto Funcional:** sintetizado a partir do campo `Impacto` quando informado pelo usuario, combinado com o Item De Trabalho relacionado e a hierarquia ja consolidada (Feature/Epic) — nunca inventado quando nenhum dos dois existir.
+* **Modulo Ou Componente Afetado:** a Area ja herdada do Item De Trabalho relacionado (ver "Antes de criar Bug" acima); quando o Profile ativo declarar um mapeamento de Area para nome de modulo/componente do negocio, usa-lo para exibir o nome de negocio junto ao Area Path tecnico.
+* **Riscos QA Relacionados:** condicoes que podem comprometer a qualidade do modulo afetado alem deste Bug especifico, identificadas apenas quando houver evidencia concreta no contexto ja coletado (ex.: outro Bug Semelhante ainda aberto no mesmo fluxo, ou Item De Trabalho relacionado com Tag ou historico indicando fragilidade conhecida) — nunca suposicao (ver "Limites" acima sobre o nome deste item).
+* **Bugs Semelhantes:** buscar, usando a Capacidade `Buscar Defeito` (`docs/CAPABILITY_CONTRACT.md`), Bugs com termos de erro, modulo/componente ou fluxo semelhantes ao Bug sendo criado, mesmo quando o titulo for diferente — nunca apenas o criterio mais estrito ja usado na checagem de duplicidade (titulo/termo/mensagem/funcionalidade/massa de teste). A busca e sempre limitada ao contexto ja resolvido para este Bug — Item De Trabalho relacionado, Feature, Epic ou Area/modulo ja identificados — nunca uma varredura ampla de todos os Bugs do projeto. Diferente dos demais itens desta secao, este e sempre reportado, mesmo quando nao houver nenhum encontrado: `Nenhum Bug semelhante encontrado` e um resultado valido e explicito, nunca omitido. Um Bug listado aqui e sempre informativo — nunca bloqueia a criacao nem reabre a checagem de duplicidade acima.
+* **Dependencias Funcionais Afetadas:** outras User Stories, Tasks ou Features irmas ja retornadas pela mesma consulta de hierarquia usada para localizar o Item De Trabalho relacionado (nunca uma nova consulta ampla) — reportadas apenas quando existir relacao direta e identificavel com o fluxo do defeito.
+* **Validacoes Recomendadas:** uma lista curta, em linguagem natural (nunca formato Gherkin ou BDD estruturado), de cenarios que a equipe de QA pode considerar validar por causa deste Bug, derivada apenas dos itens acima ja identificados (regressao, impacto, dependencias) — nunca uma suposicao nova. Nunca persistida como Documento, nunca um Cenario BDD formal — geracao de BDD/SPEC continua exclusiva de `qa-bdd-specialist` (ver "Limites" acima); quando a equipe quiser cobertura BDD formal para esses cenarios, a recomendacao e usar `qa-bdd-specialist`, nunca este Agente gerando por conta propria.
+
+**Confiabilidade Da Analise:** classificacao final desta secao, sempre uma destas tres — nunca um numero, peso ou probabilidade — refletindo exclusivamente a quantidade e a qualidade da evidencia usada acima:
+
+* **Alta:** pelo menos duas das dimensoes acima (Indicios De Regressao, Possivel Impacto Funcional, Modulo Ou Componente Afetado, Riscos QA Relacionados, Bugs Semelhantes, Dependencias Funcionais Afetadas) foram confirmadas por consulta direta ao Azure DevOps (`Buscar Defeito` ou `Buscar Item De Trabalho`), nao apenas por texto informado pelo usuario.
+* **Media:** exatamente uma dimensao foi confirmada por consulta direta ao Azure DevOps, ou duas ou mais dimensoes foram identificadas apenas a partir do texto informado pelo usuario (Observacoes, Erro encontrado, Recorrencia, Impacto), sem confirmacao cruzada no Azure DevOps.
+* **Baixa:** nenhuma dimensao foi confirmada por consulta direta, e no maximo uma foi identificada a partir do texto informado pelo usuario.
+
+Sempre acompanhada de `Base Da Confiabilidade`, citando qual dimensao contribuiu e se foi confirmada por consulta direta ou apenas inferida do texto do usuario — nunca a classificacao sozinha.
+
 Campos do processo: apos resolver Tipo Do Defeito (ver "Campos de decisao de negocio" acima), consultar no Azure DevOps a lista completa de campos deste tipo de Work Item — obrigatorios e opcionais, nao apenas os obrigatorios; o Profile ativo antecipa quais desses campos correspondem a convencoes do workspace (ex.: qual campo customizado representa Causa do problema, e qual valor padrao usar quando o processo exigir um campo de aprovacao). Preencher todo campo, obrigatorio ou nao, para o qual exista informacao suficiente no pedido ou no contexto ja coletado (Item De Trabalho relacionado, evidencia, conteudo do defeito) — nunca deixar um campo vazio por omissao quando a informacao ja esta disponivel, e nunca inventar valor para um campo sem essa base.
 
 Causa do problema:
@@ -152,12 +181,28 @@ Evidencias:
 Resultado:
 URL:
 
+Analise Enriquecida:
+- Indicios De Regressao:
+- Possivel Impacto Funcional:
+- Modulo Ou Componente Afetado:
+- Riscos QA Relacionados:
+- Bugs Semelhantes:
+- Dependencias Funcionais Afetadas:
+- Validacoes Recomendadas:
+
+Confiabilidade Da Analise:
+Base Da Confiabilidade:
+
 Acoes Pos-Criacao:
 ```
 
 Para `Resultado`, usar: `Bug criado` ou `Bug ja existente`.
 
 Para `Duplicidade verificada`, sempre explicito, nunca omitido: `sim, nenhum Bug equivalente encontrado` ou `sim, Bug equivalente localizado (ver Resultado)`.
+
+`Analise Enriquecida` so aparece quando um Bug novo for criado nesta execucao — nunca quando um Bug existente e localizado por duplicidade. Cada linha, exceto `Bugs Semelhantes`, e incluida apenas quando houver evidencia suficiente (ver "Analise Enriquecida Antes Da Criacao" acima) — omitir a linha, nunca preencher com suposicao. `Bugs Semelhantes` e sempre incluido, com `Nenhum Bug semelhante encontrado` quando aplicavel.
+
+Para `Confiabilidade Da Analise`, usar exatamente um destes valores: `Alta`, `Media`, `Baixa` (ver "Analise Enriquecida Antes Da Criacao" acima para a regra exata de classificacao), sempre acompanhado de `Base Da Confiabilidade`.
 
 Incluir `Acoes Pos-Criacao` apenas quando o Profile declarar ao menos uma acao para este evento. Cada acao reporta o mesmo nivel de detalhe de um Work Item completo, nunca apenas uma linha de status — para `criar_item_relacionado`, no minimo ID, Titulo, Area, Iteration, Assigned To, Resultado e URL do item criado (ou o motivo da falha, quando nao suportada ou malsucedida).
 
@@ -168,6 +213,8 @@ Regra de URL de Work Item — obrigatoria em todo resultado:
 * Se o Provider nao retornar a URL e ela nao puder ser resolvida com certeza, registrar `URL: nao disponivel (Provider nao retornou URL navegavel)` — nunca construir uma URL por inferencia.
 * Esta regra e agnóstica de ALM: Azure DevOps usa URL do Azure DevOps; Jira usa URL do Jira; outro Provider usa a URL retornada/resolvida pelo respectivo Provider.
 
-Antes de finalizar, verificar: defeito analisado, duplicidade verificada e reportada explicitamente, Bug criado ou localizado, parent associado e reportado quando houver evidencia, Area definida, Iteration definida com a sprint ativa real (nunca a raiz do projeto quando uma sprint ativa real existir), Tipo Do Defeito resolvido sem inferencia quando informado, Causa do problema definida, severidade/prioridade definidas, Assigned To resolvido quando informado, todo campo do processo da equipe com informacao suficiente preenchido (ver "Campos do processo"), evidencias fornecidas pelo usuario anexadas automaticamente, URL de cada Work Item no resultado preenchida com a URL navegavel real obtida do Provider (nunca `#<ID>` nem URL construida por inferencia), e acoes pos-criacao executadas e reportadas com o mesmo nivel de detalhe do Bug quando declaradas no Profile.
+Antes de finalizar, verificar: defeito analisado, duplicidade verificada e reportada explicitamente, Bug criado ou localizado, parent associado e reportado quando houver evidencia, Area definida, Iteration definida com a sprint ativa real (nunca a raiz do projeto quando uma sprint ativa real existir), Tipo Do Defeito resolvido sem inferencia quando informado, Causa do problema definida, severidade/prioridade definidas, Assigned To resolvido quando informado, todo campo do processo da equipe com informacao suficiente preenchido (ver "Campos do processo"), evidencias fornecidas pelo usuario anexadas automaticamente, URL de cada Work Item no resultado preenchida com a URL navegavel real obtida do Provider (nunca `#<ID>` nem URL construida por inferencia), acoes pos-criacao executadas e reportadas com o mesmo nivel de detalhe do Bug quando declaradas no Profile; quando um Bug novo foi criado, Analise Enriquecida reportada com cada item baseado em evidencia real ou omitido (nunca suposicao), `Bugs Semelhantes` sempre presente mesmo quando nenhum for encontrado, a busca de Bugs Semelhantes restrita ao contexto ja resolvido (nunca varredura ampla do projeto), `Validacoes Recomendadas` sempre em linguagem natural (nunca Gherkin ou BDD estruturado, nunca persistida como Documento), e `Confiabilidade Da Analise` classificada em Alta/Media/Baixa pela regra objetiva definida, sempre com `Base Da Confiabilidade`.
+
+## Modo De Execucao
 
 Nao exibir raciocinio interno, estrategia, hipoteses ou chamadas MCP.

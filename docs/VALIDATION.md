@@ -114,12 +114,19 @@ Checklist:
 * URL da pagina foi retornada.
 * Apos publicacao bem-sucedida, arquivo local foi movido para `output/delete/`.
 * Em caso de falha na publicacao, arquivo local permaneceu em `output/`.
+* Estrutura QA da Feature foi verificada: User Story De QA encontrada, nao encontrada ou ambigua, sempre reportada de forma explicita.
+* Quando a User Story De QA foi encontrada, as tres Tasks (`Planejar os testes`, `Executar os testes`, `Equalizar o ambiente`) foram reutilizadas quando ja sincronizadas, atualizadas quando desatualizadas, ou criadas quando ausentes — nunca apenas "criada se faltar".
+* Task `Planejar os testes`, quando criada ou atualizada nesta execucao, contem o bloco de conteudo controlado (`[qa-orchestrator:inicio]`/`[qa-orchestrator:fim]`) com link da Feature, link da Wiki/SPEC, `Ultima sincronizacao` e nota de geracao automatica.
+* Executar o mesmo pedido (`<Projeto> <WorkItemID>`) uma segunda vez, sem mudar Feature nem Wiki, nao cria nem atualiza Tasks — todas sao reportadas como `Existente` na segunda execucao, e `Ultima sincronizacao` permanece com o mesmo valor da primeira execucao (nao avanca em reuso sem alteracao).
+* Alterar a Feature ou republicar a Wiki em uma URL diferente e rodar o `qa-orchestrator` novamente: a Task `Planejar os testes` e reportada como `Atualizada`, com os links do bloco controlado refletindo o novo estado e `Ultima sincronizacao` avancada para o momento da atualizacao.
+* Editar manualmente a descricao da Task `Planejar os testes` (fora dos marcadores) e rodar o `qa-orchestrator` novamente: o conteudo manual permanece intacto apos a sincronizacao, e apenas o bloco controlado e atualizado quando necessario.
+* Task `Planejar os testes` criada manualmente antes desta versao (sem os marcadores): apos a primeira sincronizacao, o bloco controlado aparece no topo da descricao e todo o conteudo anterior permanece preservado abaixo.
 
 ## Validacao Do Agente De Bug
 
 Use quando houver mudanca no `qa-bug-specialist`, em um Profile que ele consome (`profiles/<nome>/profile.json`) ou no template de Bug. Evite criar Bugs artificiais; prefira um defeito real de QA quando possivel.
 
-A suite de regressao completa deste agente — dez cenarios fixos (Bug novo, duplicidade, Task filha, resolucao de Projeto, resolucao de Sprint, descricao completa, campos do processo, evidencias, vinculacao a Feature, resumo final), cada um com objetivo, entrada, comportamento esperado e criterios de aprovacao — vive em [BUG_AGENT_VALIDATION.md](BUG_AGENT_VALIDATION.md). Rode os cenarios afetados pela mudanca antes de compartilhar com o time; rode todos antes de uma mudanca estrutural (Gate, mecanismo de Profile, template de Resultado Final).
+A suite de regressao completa deste agente — onze cenarios fixos (Bug novo, duplicidade, Task filha, resolucao de Projeto, resolucao de Sprint, descricao completa, campos do processo, evidencias, vinculacao a Feature, resumo final, Analise Enriquecida antes da criacao), cada um com objetivo, entrada, comportamento esperado e criterios de aprovacao — vive em [BUG_AGENT_VALIDATION.md](BUG_AGENT_VALIDATION.md). Rode os cenarios afetados pela mudanca antes de compartilhar com o time; rode todos antes de uma mudanca estrutural (Gate, mecanismo de Profile, template de Resultado Final).
 
 Entrada recomendada para um cenario avulso:
 

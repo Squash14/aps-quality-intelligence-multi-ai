@@ -91,6 +91,7 @@ Se um adaptador de cliente futuro (novo cliente de IA) usar o mesmo padrao de co
 | `qa-bdd-specialist` | SPEC, cenarios BDD, riscos, gaps e cobertura QA. |
 | `qa-wiki-specialist` | Destino, auditoria, atualizacao e publicacao na Wiki. |
 | `qa-bug-specialist` | Analise de defeitos e criacao de Bug no Azure DevOps. |
+| `qa-health-specialist` | Diagnostico e auditoria QA somente leitura (Epic, Feature, User Story ou Item De Trabalho), sem nunca alterar nada. Totalmente independente, chamavel diretamente sem passar por `qa-orchestrator`. |
 
 Regras de fronteira:
 
@@ -98,6 +99,7 @@ Regras de fronteira:
 * `qa-bdd-specialist` gera conteudo funcional e arquivo local, mas nao publica na Wiki.
 * `qa-wiki-specialist` decide destino e publica, mas nao inventa regra funcional.
 * `qa-bug-specialist` atua somente quando o pedido envolver defeito.
+* `qa-health-specialist` diagnostica e reporta, mas nunca escreve — nunca cria, atualiza, sincroniza ou publica nada no Azure DevOps, na Wiki ou em arquivos do projeto; a checagem de Wiki fica limitada a existencia (nunca substitui a auditoria estrutural de `qa-wiki-specialist`) e a checagem de Estrutura QA fica limitada a leitura (nunca substitui a criacao/sincronizacao de `qa-orchestrator`).
 * Especialistas devem reutilizar contexto recebido e evitar novas chamadas MCP quando os dados ja forem suficientes.
 * Todo agente — incluindo os tres especialistas, que podem ser chamados diretamente pelo usuario sem passar por `qa-orchestrator` (ver `docs/USAGE.md`) — executa o Gate De Preparacao De Ambiente (`docs/DOMAIN_CONTRACT.md`) como primeiro passo do proprio fluxo, antes de ler documentacao adicional, consultar o Item De Trabalho ou delegar. Ver `docs/DECISIONS.md`, DEC-0006.
 
@@ -107,24 +109,13 @@ Existem hoje **dois fluxos validos** para alterar um agente, dependendo se ele j
 
 ### Agente com fonte canonica (`agents/<nome>.md` existe)
 
-Hoje: `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`.
+Hoje: todos os cinco agentes — `qa-orchestrator`, `qa-bug-specialist`, `qa-wiki-specialist`, `qa-bdd-specialist`, `qa-health-specialist`. Nenhum agente deste framework depende mais de manutencao manual multi-cliente (`qa-orchestrator` migrou em DEC-0011, fechando a Etapa 3 do plano de migracao de DEC-0003).
 
 1. Edite apenas `agents/<nome>.md` (secoes `## Comportamento Compartilhado` e `## Particularidades Por Cliente`).
 2. Rode `node scripts/render-agents.mjs agents/<nome>.md` para regenerar `.claude/agents/`, `.codex/agents/` e `.github/agents/`.
 3. Nunca edite os tres arquivos gerados diretamente — a proxima regeneracao sobrescreve qualquer edicao manual sem aviso.
 4. Execute `./scripts/check.sh` (valida, entre outras coisas, que os gerados batem com a fonte via `render-agents.mjs --check-all`).
-5. Valide com um Work Item real antes de compartilhar com o time. Para `qa-bug-specialist`, use a suite de regressao em `docs/BUG_AGENT_VALIDATION.md` — rode os cenarios afetados pela mudanca, e todos os dez antes de uma mudanca estrutural.
-
-### Agente ainda sem fonte canonica (`agents/<nome>.md` nao existe)
-
-Hoje: `qa-orchestrator`. Este agente ja divergiu de forma real entre clientes porque depende inteiramente de disciplina manual — ver `docs/AGENT_PARITY.md` para o estado atual dessa divergencia.
-
-1. Leia o arquivo do agente afetado nos tres clientes antes de editar, para entender se ja existe divergencia previa.
-2. Atualize os tres formatos manualmente: `.github/agents`, `.codex/agents` e `.claude/agents`, com o mesmo comportamento funcional.
-3. Preserve o formato publico de entrada.
-4. Execute `./scripts/check.sh` — hoje ele so confirma presenca de arquivo e de conceitos-chave (`scripts/validate-agent-assets.mjs`), **nao** equivalencia semantica completa entre os tres arquivos. Passar no check nao garante paridade real para esses dois agentes.
-5. Valide com um Work Item real em pelo menos dois clientes antes de compartilhar com o time.
-6. Ao terminar, considere migrar o agente para fonte canonica (`agents/<nome>.md`) seguindo o padrao de `qa-bug-specialist`/`qa-wiki-specialist`, para que o proximo check cubra esse agente por completo.
+5. Valide com um Work Item real antes de compartilhar com o time. Para `qa-bug-specialist`, use a suite de regressao em `docs/BUG_AGENT_VALIDATION.md` — rode os cenarios afetados pela mudanca, e todos os onze antes de uma mudanca estrutural.
 
 ### Provider (planejado — Fase 2, ver `docs/DECISIONS.md` DEC-0003)
 
@@ -132,11 +123,11 @@ Esta estrutura ainda nao existe no repositorio nesta etapa (Etapa 1 do plano de 
 
 Um Provider vive em `providers/<nome>/` e e responsavel por:
 
-1. Declarar, em `providers/<nome>/provider.md`, quais Capacidades de `docs/CAPABILITY_CONTRACT.md` ele cumpre. `Buscar Item De Trabalho` e obrigatoria para qualquer Provider valido. As demais sao opcionais, mas seguem a regra de emparelhamento descrita la: Buscar Documento/Publicar Documento so existem juntas, assim como Buscar Defeito/Criar Defeito — nunca metade de um par.
+1. Declarar, em `providers/<nome>/provider.md`, quais Capacidades de `docs/CAPABILITY_CONTRACT.md` ele cumpre. `Buscar Item De Trabalho` e obrigatoria para qualquer Provider valido. As demais sao opcionais, mas seguem a regra de emparelhamento descrita la: Buscar Documento/Publicar Documento so existem juntas, assim como Buscar Defeito/Criar Defeito e Buscar Item De Trabalho/Sincronizar Item De Trabalho — nunca metade de um par.
 2. Mapear o vocabulario de hierarquia do ALM (ex.: Epic/Feature/User Story/Task no Azure DevOps) para os termos de `docs/DOMAIN_CONTRACT.md`.
 3. Declarar o que constitui, para aquele tipo de ALM, uma instancia conectavel (Organizacao no Azure DevOps, Site no Jira, Conta no GitHub etc.) — e isso que um Profile aponta como qual instancia concreta esta em uso.
 4. Referenciar, sem embutir no texto de `provider.md`, um artefato de configuracao de conexao na mesma pasta (hoje sempre um template MCP, ex. `mcp-config.template.json`). O texto de `provider.md` nunca deve citar mecanismo de transporte, nome de tool MCP ou detalhe de protocolo — trocar o mecanismo no futuro deve exigir trocar esse arquivo, nunca reescrever `provider.md`.
-5. **Arquitetura-alvo para Resolucao De Projeto:** resolver, internamente a cada Capacidade que recebe Projeto como entrada (`Buscar Item De Trabalho`, `Buscar Defeito`, `Criar Defeito` etc.), o Projeto (Logico) informado pelo usuario para o projeto ou container fisico correspondente daquela instancia, usando o mapeamento declarado pelo Profile ativo (`sistema_alm.mapeamento_projeto_logico`). Esta resolucao e responsabilidade exclusiva do Provider (`docs/CAPABILITY_CONTRACT.md`, linha "Toda ocorrencia de 'Projeto'..."), nunca exposta ao Agente como uma etapa ou Capacidade propria — o Agente apenas informa o Projeto e recebe o resultado ja resolvido das Capacidades que chama. Ate o Provider ser extraido, ver "Profile" abaixo para a implementacao provisoria em vigor.
+5. **Arquitetura-alvo para Resolucao De Projeto:** resolver, internamente a cada Capacidade que recebe Projeto como entrada (`Buscar Item De Trabalho`, `Buscar Defeito`, `Criar Defeito`, `Sincronizar Item De Trabalho` etc.), o Projeto (Logico) informado pelo usuario para o projeto ou container fisico correspondente daquela instancia, usando o mapeamento declarado pelo Profile ativo (`sistema_alm.mapeamento_projeto_logico`). Esta resolucao e responsabilidade exclusiva do Provider (`docs/CAPABILITY_CONTRACT.md`, linha "Toda ocorrencia de 'Projeto'..."), nunca exposta ao Agente como uma etapa ou Capacidade propria — o Agente apenas informa o Projeto e recebe o resultado ja resolvido das Capacidades que chama. Ate o Provider ser extraido, ver "Profile" abaixo para a implementacao provisoria em vigor.
 
 Um Provider nao decide regra de negocio de QA, nao gera SPEC/BDD, nao decide layout de saida — isso permanece responsabilidade dos agentes. Validacao esperada quando esta estrutura existir: confirmar que os pares de Capacidade estao completos e que `Buscar Item De Trabalho` esta presente, alem de validacao ponta a ponta com um Item De Trabalho real.
 
@@ -156,7 +147,7 @@ Multiplos Profiles podem apontar para o mesmo Provider (dois workspaces diferent
 
 **Mecanismo de carregamento:** leitura em runtime, nao merge em tempo de renderizacao. O agente e instruido, no proprio texto de `agents/qa-bug-specialist.md`, a ler o arquivo do Profile ativo no inicio da execucao antes de resolver Projeto, Tipo Do Defeito, Causa do problema ou qualquer outra convencao especifica do workspace. `scripts/render-agents.mjs` no conhece Profile e nao precisa mudar — o agente renderizado permanece identico independentemente de qual Profile esta ativo. Essa escolha (runtime vs render-time) foi deliberada: com um unico Profile em uso hoje, mesclar em tempo de renderizacao adicionaria uma dimensao de build (agente x cliente x Profile) sem necessidade real ainda (Principio 1). Revisitar quando houver demanda real por multiplos Profiles simultaneos no mesmo agente renderizado.
 
-**Implementacao Provisoria De Resolucao De Projeto e Time (aplica-se a todos os Agentes que invocam Capacidades com Projeto como parametro):** a arquitetura-alvo (ver "Provider" acima) atribui a resolucao de Projeto (Logico) para projeto fisico exclusivamente ao Provider, nunca ao Agente. Como `providers/` ainda nao existe neste repositorio, todo Agente que invocar Capacidades que recebam Projeto como parametro (`Buscar Item De Trabalho`, `Buscar Defeito`, `Criar Defeito`, `Buscar Documento`, `Publicar Documento`, `Obter Sprint` e equivalentes) executa hoje, provisoriamente, o mesmo procedimento que o Provider executara: ler `sistema_alm.mapeamento_projeto_logico` do Profile ativo, resolver o Projeto informado contra as entradas `logico`/`aliases` declaradas ali e, na ausencia de correspondencia, usar o proprio valor informado como identificador do projeto no ALM (fallback que preserva o comportamento anterior, quando nenhuma resolucao existia). Se o projeto resultante nao existir no ALM, o agente interrompe e informa explicitamente que falta uma entrada em `mapeamento_projeto_logico`, em vez de perguntar ao usuario qual projeto usar. O Projeto Fisico resolvido deve ser passado como parametro explicito em toda chamada ao MCP ou mecanismo de transporte equivalente durante o restante do fluxo — nunca omitido, nunca deixado em branco para o MCP solicitar interativamente (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido"). Da mesma forma, o Time resolvido a partir de `sistema_alm.time_padrao` do Profile ativo deve ser passado explicitamente em toda chamada que aceite team/time como parametro — nunca deixado implicito nem solicitado ao usuario quando o Profile ja o declara; se o Profile nao declarar um Time para o projeto resolvido, interromper e informar que falta essa configuracao. Este procedimento existe apenas para que o comportamento observado hoje seja identico ao da arquitetura-alvo; ele migra inteiramente para dentro do Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003), sem exigir mudanca de contrato nem de Profile.
+**Implementacao Provisoria De Resolucao De Projeto e Time (aplica-se a todos os Agentes que invocam Capacidades com Projeto como parametro):** a arquitetura-alvo (ver "Provider" acima) atribui a resolucao de Projeto (Logico) para projeto fisico exclusivamente ao Provider, nunca ao Agente. Como `providers/` ainda nao existe neste repositorio, todo Agente que invocar Capacidades que recebam Projeto como parametro (`Buscar Item De Trabalho`, `Buscar Defeito`, `Criar Defeito`, `Sincronizar Item De Trabalho`, `Buscar Documento`, `Publicar Documento`, `Obter Sprint` e equivalentes) executa hoje, provisoriamente, o mesmo procedimento que o Provider executara: ler `sistema_alm.mapeamento_projeto_logico` do Profile ativo, resolver o Projeto informado contra as entradas `logico`/`aliases` declaradas ali e, na ausencia de correspondencia, usar o proprio valor informado como identificador do projeto no ALM (fallback que preserva o comportamento anterior, quando nenhuma resolucao existia). Se o projeto resultante nao existir no ALM, o agente interrompe e informa explicitamente que falta uma entrada em `mapeamento_projeto_logico`, em vez de perguntar ao usuario qual projeto usar. O Projeto Fisico resolvido deve ser passado como parametro explicito em toda chamada ao MCP ou mecanismo de transporte equivalente durante o restante do fluxo — nunca omitido, nunca deixado em branco para o MCP solicitar interativamente (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido"). Da mesma forma, o Time resolvido a partir de `sistema_alm.time_padrao` do Profile ativo deve ser passado explicitamente em toda chamada que aceite team/time como parametro — nunca deixado implicito nem solicitado ao usuario quando o Profile ja o declara; se o Profile nao declarar um Time para o projeto resolvido, interromper e informar que falta essa configuracao. Este procedimento existe apenas para que o comportamento observado hoje seja identico ao da arquitetura-alvo; ele migra inteiramente para dentro do Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003), sem exigir mudanca de contrato nem de Profile.
 
 Ao criar um novo Profile:
 
@@ -171,7 +162,7 @@ No Windows, use tambem:
 .\scripts\check.ps1
 ```
 
-Ambos os checks rodam automaticamente em `push`/`pull_request` via `.github/workflows/check.yml` (ver `docs/DECISIONS.md`, DEC-0002). Isso reduz — mas nao elimina — a chance de divergencia passar despercebida: para agentes sem fonte canonica, o CI so pega ausencia de arquivo ou de conceito-chave, nao diferenca de comportamento linha a linha. Nenhum dos dois checks substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
+Ambos os checks rodam automaticamente em `push`/`pull_request` via `.github/workflows/check.yml` (ver `docs/DECISIONS.md`, DEC-0002). Como todos os agentes ja tem fonte canonica (`docs/AGENT_PARITY.md`), `render-agents.mjs --check-all` garante paridade byte a byte entre os tres clientes para todos eles. Nenhum dos dois checks substitui validacao real no Azure DevOps quando houver mudanca de comportamento.
 
 Antes de alterar scripts de setup:
 
@@ -197,8 +188,7 @@ Checklist de PR:
 * Nomes dos agentes batem com os arquivos em `.github/agents/`.
 * Agentes equivalentes existem em `.codex/agents/` e `.claude/agents/`.
 * Conceitos obrigatorios dos agentes passam em `scripts/validate-agent-assets.mjs`.
-* Se o agente tem fonte canonica em `agents/`, ela foi editada e `node scripts/render-agents.mjs agents/<nome>.md` foi rodado (nunca editar os tres gerados direto).
-* Se o agente ainda nao tem fonte canonica, os tres arquivos foram revisados lado a lado para o mesmo comportamento — o check automatizado nao garante isso para esses agentes.
+* A fonte canonica em `agents/<nome>.md` foi editada e `node scripts/render-agents.mjs agents/<nome>.md` foi rodado (nunca editar os tres gerados direto).
 * Scripts de setup e validacao continuam alinhados com os docs.
 * Um fluxo com Work Item real foi verificado quando houve mudanca de comportamento dos agentes.
 * Se o Gate De Preparacao De Ambiente foi alterado, a mudanca foi feita apenas em `docs/DOMAIN_CONTRACT.md` — nenhum agente recebeu logica reescrita ou parafraseada do Gate, apenas a referencia curta ja existente.

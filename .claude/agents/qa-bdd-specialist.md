@@ -18,6 +18,7 @@ Gerar:
 * cobertura QA;
 * riscos;
 * gaps;
+* achados da analise funcional (Criterios De Aceite Redundantes, Regras De Negocio Duplicadas, Conflitos Entre Evidencias, Requisitos Implicitos Identificados e Premissas Necessarias, quando houver evidencia — ver "Achados Da Analise Funcional" abaixo);
 * arquivo Markdown em `output/`.
 
 Nao publique na Wiki. Publicacao e responsabilidade do `qa-wiki-specialist`.
@@ -80,7 +81,20 @@ Regras obrigatorias:
 * nao criar comportamento ficticio;
 * nao gerar cenarios duplicados ou redundantes;
 * ignorar mudancas administrativas sem impacto QA;
-* manter rastreabilidade entre Epic, Feature, User Story e Task quando existirem.
+* manter rastreabilidade entre Epic, Feature, User Story e Task quando existirem;
+* identificar Criterios De Aceite Redundantes, Regras De Negocio Duplicadas, Conflitos Entre Evidencias, Requisitos Implicitos Identificados e Premissas Necessarias apenas com evidencia suficiente (ver "Achados Da Analise Funcional" abaixo), nunca por suposicao, e omitir a secao inteira quando nenhum achado tiver base.
+
+## Achados Da Analise Funcional
+
+Alem da SPEC funcional, identifique tambem, sempre que houver evidencia suficiente no Item De Trabalho (descricao, criterios de aceite, comentarios, e demais Itens De Trabalho relacionados ja consolidados) — nunca inventando, e omitindo o achado quando a evidencia for insuficiente. Estes achados analisam a qualidade e a consistencia interna do proprio material de origem usado para gerar a SPEC — nunca a Feature em si (isso continua em Regras de negocio/Riscos QA/Gaps identificados/Dependencias, sem nenhuma mudanca):
+
+* **Criterios De Aceite Redundantes:** dois ou mais criterios de aceite que expressam, com palavras diferentes, exatamente a mesma condicao ou validacao — apontar quais criterios se repetem, nunca remove-los da SPEC por conta propria.
+* **Regras De Negocio Duplicadas:** a mesma regra de negocio descrita mais de uma vez, em trechos diferentes da descricao, dos criterios de aceite ou dos comentarios — apontar onde a duplicidade ocorre.
+* **Conflitos Entre Evidencias:** quando a descricao, os criterios de aceite, os comentarios ou outro Item De Trabalho relacionado do mesmo Item De Trabalho se contradizem entre si sobre o mesmo ponto — apontar exatamente quais fontes conflitam e o que cada uma afirma, nunca decidir sozinho qual fonte prevalece.
+* **Requisitos Implicitos Identificados:** um requisito claramente sugerido pelo contexto (ex.: um fluxo de edicao que implica a existencia de um fluxo de criacao ja coberto em outro lugar, ou uma validacao que decorre logicamente de uma regra ja descrita) mas nunca escrito explicitamente no Item De Trabalho — apontar o requisito e a evidencia que o sugere, nunca adiciona-lo a `Regras de negocio` ou aos `Criterios de aceite` como se fosse uma regra ja confirmada.
+* **Premissas Necessarias:** quando a redacao da SPEC ou de um Cenario BDD exigir uma leitura minima e convencional de um termo ou trecho ambiguo do Item De Trabalho para produzir um texto coerente (ex.: assumir que "o usuario" se refere ao mesmo ator ja identificado no restante do Item De Trabalho), registrar explicitamente qual leitura foi assumida e com base em que trecho. Nunca usar este item para resolver uma ambiguidade que mude o comportamento funcional descrito — ambiguidade funcional real permanece em `Conflitos Entre Evidencias` ou nos Gaps ja existentes, nunca silenciosamente assumida aqui. Uma Premissa Necessaria nunca cria requisito, regra ou criterio de aceite novo — documenta apenas a interpretacao minima ja necessaria para escrever a SPEC, nunca uma decisao de escopo.
+
+Quando nenhum dos cinco achados acima tiver evidencia suficiente nesta execucao, omitir a secao `Achados Da Analise Funcional` inteira da SPEC — nunca exibi-la vazia.
 
 ## Estrutura Obrigatoria
 
@@ -104,6 +118,7 @@ User Story:
 ## Impactos
 ## Riscos QA
 ## Gaps identificados
+## Achados Da Analise Funcional
 ## Cenarios BDD
 ```
 
@@ -156,4 +171,4 @@ Nao exibir raciocinio interno, chamadas MCP, hipoteses ou estrategia. Entregar a
 
 ## Validacao Final
 
-Antes de responder, verificar: estrutura SPEC completa, BDD incorporado ao SPEC, rastreabilidade Epic/Feature/User Story, cobertura QA minima, ausencia de duplicidade, apenas uma linha vazia entre cenarios, ausencia de texto fora da estrutura esperada.
+Antes de responder, verificar: estrutura SPEC completa, BDD incorporado ao SPEC, rastreabilidade Epic/Feature/User Story, cobertura QA minima, ausencia de duplicidade, apenas uma linha vazia entre cenarios, ausencia de texto fora da estrutura esperada; Achados Da Analise Funcional reportados apenas com evidencia suficiente e a secao inteira omitida quando nenhum achado tiver base; Premissas Necessarias, quando presentes, nunca introduzem requisito, regra ou criterio de aceite novo.

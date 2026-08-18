@@ -8,7 +8,7 @@ Este documento e a suite de regressao do `qa-bug-specialist`: um conjunto fixo d
 * Sempre que um Profile usado por este agente (ex. `profiles/apsen-arquitetura/profile.json`) ganhar ou perder um campo que o agente le (ex. `mapeamento_projeto_logico`, `acoes_por_evento`, `tipo_defeito`).
 * Sempre que `docs/BUG_AGENT_TEMPLATE.md` mudar a forma de entrada esperada.
 
-Nao e necessario rodar os dez cenarios a cada mudanca trivial — rode ao menos os cenarios cuja area foi afetada pela mudanca, e todos os dez antes de uma mudanca estrutural (ex.: mudar o Gate, mudar o mecanismo de Profile, mudar o template de Resultado Final).
+Nao e necessario rodar os onze cenarios a cada mudanca trivial — rode ao menos os cenarios cuja area foi afetada pela mudanca, e todos os onze antes de uma mudanca estrutural (ex.: mudar o Gate, mudar o mecanismo de Profile, mudar o template de Resultado Final).
 
 ## Como Rodar
 
@@ -156,6 +156,25 @@ Notas de execucao:
 * O relatorio final contem, no minimo: Item De Trabalho Relacionado (ID/Titulo/URL), `Duplicidade verificada` explicito, todos os campos do bloco do Bug, e `Acoes Pos-Criacao` detalhada (nao uma linha unica de status) quando aplicavel.
 * Nenhum bloco esperado ficou implicito ou omitido.
 * Todas as URLs relevantes (Feature, Bug, Task) estao presentes no relatorio.
+
+### Cenario 11 — Analise Enriquecida Antes Da Criacao
+
+**Objetivo:** confirmar que a Analise Enriquecida (ver `agents/qa-bug-specialist.md`, "Analise Enriquecida Antes Da Criacao", DEC-0012) so aparece quando um Bug novo e criado, cada item reflete apenas evidencia real, `Bugs Semelhantes` e sempre reportado mesmo sem resultado, `Validacoes Recomendadas` nunca vira BDD/Gherkin, e `Confiabilidade Da Analise` nunca e um numero.
+
+**Entrada:** dois pedidos na mesma rodada, ambos no formato de `docs/BUG_AGENT_TEMPLATE.md`, para o mesmo modulo/Feature:
+1. Um pedido de Bug novo (Cenario 1) para um defeito com evidencia rica — Recorrencia informada, Impacto descrito, e ao menos um Bug ja existente e semelhante (mesmo modulo, titulo diferente) no Azure DevOps.
+2. Um segundo pedido de Bug novo, para um defeito com evidencia minima (apenas os campos obrigatorios, sem Recorrencia/Impacto, sem nenhum Bug semelhante no Azure DevOps).
+
+**Comportamento Esperado:** no pedido 1, o agente reporta `Analise Enriquecida` com a maioria dos itens preenchidos com base em evidencia real, localiza o Bug semelhante via `Buscar Defeito` (mesmo com titulo diferente), e classifica `Confiabilidade Da Analise` como `Alta` ou `Media` conforme a regra objetiva. No pedido 2, o agente reporta `Bugs Semelhantes: Nenhum Bug semelhante encontrado` de forma explicita, omite os demais itens sem evidencia (nunca inventa), e classifica `Confiabilidade Da Analise` como `Baixa`.
+
+**Criterios De Aprovacao:**
+* `Analise Enriquecida` nao aparece no resultado de um Bug localizado por duplicidade (reexecutar o Cenario 2 confirma isso).
+* No pedido 1, `Bugs Semelhantes` lista o Bug equivalente encontrado, mesmo com titulo diferente do Bug sendo criado.
+* No pedido 2, `Bugs Semelhantes` contem exatamente `Nenhum Bug semelhante encontrado`, nunca omitido nem em branco.
+* Nenhum item da Analise Enriquecida contem valor inventado sem base no pedido ou no Azure DevOps — itens sem evidencia suficiente estao ausentes do relatorio, nunca preenchidos com suposicao.
+* `Validacoes Recomendadas`, quando presente, e uma lista em linguagem natural — nunca formato Gherkin (`Dado`/`Quando`/`Entao`) nem qualquer estrutura de Cenario BDD.
+* `Confiabilidade Da Analise` usa exatamente `Alta`, `Media` ou `Baixa` — nunca um numero, percentual ou probabilidade — e vem sempre acompanhada de `Base Da Confiabilidade` explicando a classificacao.
+* A busca por Bugs Semelhantes no pedido 2 nao percorre Bugs de modulos/Features fora do contexto ja resolvido para aquele Bug (sem varredura ampla do projeto).
 
 ## Relacao Com Outros Documentos
 

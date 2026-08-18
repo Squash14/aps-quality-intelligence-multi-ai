@@ -43,12 +43,13 @@ Agentes disponíveis nos três clientes:
 
 | Agente | Quando usar | O que passar |
 | --- | --- | --- |
-| `qa-orchestrator` | Fluxo completo de documentação QA. | `<Projeto> <WorkItemID>` |
-| `qa-bdd-specialist` | Gerar SPEC/BDD sem publicar Wiki. | Projeto, Work Item ou contexto funcional. |
-| `qa-wiki-specialist` | Auditar, localizar, criar ou atualizar Wiki. | Projeto, Work Item, arquivo/conteúdo e intenção de leitura ou publicação. |
-| `qa-bug-specialist` | Analisar defeito e criar/localizar Bug. | Use o template em `docs/BUG_AGENT_TEMPLATE.md`. |
+| `qa-orchestrator` | Coordenar o fluxo completo: busca do Work Item, SPEC/BDD, Sincronização Incremental (decidir entre manter, atualizar parcialmente ou regenerar) e publicação na Wiki, ponta a ponta. | `<Projeto> <WorkItemID>` |
+| `qa-bdd-specialist` | Gerar ou revisar SPEC funcional e cenários BDD de forma especializada, sem publicar na Wiki. | Projeto, Work Item ou contexto funcional. |
+| `qa-wiki-specialist` | Publicar, atualizar, organizar e prevenir duplicidade de páginas na Wiki — auditoria, localização, criação e atualização. | Projeto, Work Item, arquivo/conteúdo e intenção de leitura ou publicação. |
+| `qa-bug-specialist` | Criar e manter Bugs no Azure DevOps: checagem de duplicidade, vínculos e ações pós-criação. | Use o template em `docs/BUG_AGENT_TEMPLATE.md`. |
+| `qa-health-specialist` | Diagnóstico e auditoria QA somente leitura — hierarquia, Estrutura QA, Wiki, Bugs, cobertura, riscos, gaps e Situação QA, sem alterar nada. Totalmente independente do `qa-orchestrator`. | Projeto e um Epic, Feature, User Story ou Item De Trabalho. |
 
-Na maioria dos casos, use `qa-orchestrator`.
+Escolha o especialista diretamente (`qa-bdd-specialist`, `qa-wiki-specialist`, `qa-bug-specialist` ou `qa-health-specialist`) quando o objetivo já for conhecido — por exemplo, só gerar SPEC/BDD, só validar/publicar Wiki, só criar um Bug, ou só diagnosticar o estado de QA sem alterar nada. Use `qa-orchestrator` quando for necessário coordenar o fluxo completo, do Work Item até a publicação.
 
 ## Pré-Requisitos
 
@@ -161,6 +162,12 @@ Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLAT
 
 Template completo: [docs/BUG_AGENT_TEMPLATE.md](docs/BUG_AGENT_TEMPLATE.md).
 
+Para diagnóstico QA somente leitura:
+
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
 Validar MCP no Codex, antes de pedir qualquer agente:
 
 ```bash
@@ -223,6 +230,12 @@ Validar destino Wiki do Work Item Backoffice 11234 sem publicar.
 /agent
 qa-bug-specialist
 Projeto Backoffice. Defeito: <descrição do defeito>.
+```
+
+```text
+/agent
+qa-health-specialist
+Diagnosticar a Feature 12345 do projeto Backoffice.
 ```
 
 > **Nota:** o `setup-mcp.sh copilot` pré-aprova automaticamente todas as ferramentas do servidor MCP `ado` para este diretório via `~/.copilot/permissions-config.json`. Não é necessário executar `/allow-all` a cada sessão após o setup.
@@ -289,6 +302,10 @@ Use o agente qa-wiki-specialist para validar o destino Wiki do Work Item Backoff
 Use o agente qa-bug-specialist para criar um bug seguindo docs/BUG_AGENT_TEMPLATE.md.
 ```
 
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
 Validar MCP no Claude:
 
 ```bash
@@ -337,9 +354,9 @@ Todo agente deste framework depende do Azure DevOps para localizar Work Item, co
 | Copilot | `/mcp show <nome do MCP>` (use `ado`, salvo se você alterou `MCP_SERVER_NAME`) |
 | Claude | `claude mcp list` (fora da sessão) |
 
-Se o servidor não aparecer, não peça o agente ainda. Revise a seção de setup do cliente escolhido primeiro — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
+Se o servidor não aparecer, não peça o agente ainda — um agente chamado sem o MCP Azure DevOps disponível não consegue consultar Work Item nem Wiki, mesmo que o restante do framework esteja correto, e o sintoma observado (agente não encontra nada) facilmente é confundido com um problema no agente ou no framework.
 
-Independente do cliente, a conexão e a autenticação do MCP valem para a sessão atual, não para o config gerado em disco. Uma nova sessão pode indicar o MCP como desconectado ou pendente de autenticação mesmo com o setup já validado antes — isso não é uma falha de configuração. Nesse caso, reconecte ou reautentique usando o comando de MCP do próprio cliente antes de pedir qualquer agente, em vez de rodar `setup-mcp` novamente.
+A configuração persistente gerada pelo setup (`.mcp.json`, `.claude/settings.json`, o profile do Codex, `~/.copilot/permissions-config.json`) e a conexão/autenticação da sessão atual são coisas diferentes. Uma vez validado, o setup não precisa ser refeito a cada sessão — mas a conexão e a autenticação do MCP valem apenas para a sessão atual do cliente, não para o config gerado em disco. Se o servidor não aparecer, a causa mais comum é a sessão (MCP ainda não conectado ou pedindo reautenticação), não a configuração: primeiro reconecte ou reautentique usando o comando de MCP do próprio cliente (tabela acima). Isso pode variar conforme o cliente e a implementação do MCP em uso, e não significa que o setup precise ser executado novamente. Só revise a seção de setup do cliente escolhido se, mesmo após reconectar/reautenticar, o servidor continuar ausente.
 
 ## Resultado Final Esperado
 
@@ -361,6 +378,22 @@ Ação executada:
 Resultado:
 URL da página:
 Arquivo local:
+
+Estrutura QA:
+
+User Story QA:
+Tasks:
+- Planejar os testes:
+- Executar os testes:
+- Equalizar o ambiente:
+Links das Tasks criadas:
+
+Decisao De Delegacao:
+- qa-bdd-specialist: <Executado | Nao Executado> - <motivo>
+- qa-wiki-specialist: <Executado | Nao Executado> - <motivo>
+- qa-bug-specialist: <Executado | Nao Executado> - <motivo>
+
+Resumo Do Fluxo:
 ```
 
 Para `Decisão SPEC`, esperado:
@@ -387,6 +420,101 @@ Para `Arquivo local`, esperado:
 Movido para output/delete/
 Preservado em output/ devido a falha
 ```
+
+Após sincronizar SPEC/BDD/Wiki (mesmo quando `Decisão SPEC` for `Mantido sem alterações`), o `qa-orchestrator` garante a estrutura mínima de QA da Feature relacionada **e a mantém sincronizada** — nunca apenas "cria se faltar": localiza a User Story de QA filha direta da Feature (título contendo "QA" ou Tag "QA") e, quando encontrada, para cada uma das três Tasks fixas — `Planejar os testes`, `Executar os testes`, `Equalizar o ambiente` — decide entre reutilizar (já existe e já está sincronizada), atualizar (já existe mas está desatualizada) ou criar (ausente), sempre buscando antes de agir, nunca duplicando entre execuções. A Task `Planejar os testes` carrega um bloco de conteúdo controlado pelo framework (link da Feature, link da Wiki/SPEC, data/hora `Última sincronização` e nota de geração automática), delimitado por marcadores; ao criar ou atualizar, apenas esse bloco é escrito — qualquer conteúdo manual do QA fora dele é sempre preservado, nunca sobrescrito. `Última sincronização` só avança quando o bloco é criado ou quando Feature/Wiki realmente mudam — nunca a cada execução em que a Task é apenas reutilizada — para que reflita a última sincronização real, útil para auditoria sem precisar consultar histórico. Quando a User Story de QA não é encontrada, o agente reporta isso e **não a cria automaticamente** nesta versão; quando há mais de uma candidata, reporta a ambiguidade sem escolher nenhuma.
+
+`Decisão De Delegação` reporta, sempre, os três especialistas que o `qa-orchestrator` pode chamar (`qa-bdd-specialist`, `qa-wiki-specialist`, `qa-bug-specialist`), cada um como `Executado` ou `Não Executado` com o motivo objetivo da decisão — o `qa-orchestrator` evita chamadas desnecessárias reaproveitando evidência já coletada no próprio fluxo (a classificação da Sincronização Incremental, e a página Wiki/tipo do Work Item já localizados), nunca fazendo uma chamada MCP nova só para decidir. Por exemplo: quando a Sincronização Incremental classifica todas as diferenças como `Sem impacto documental` e já existe uma página Wiki válida, nem `qa-bdd-specialist` nem `qa-wiki-specialist` são chamados nessa execução — a URL já conhecida é reutilizada diretamente no resultado. `qa-bug-specialist` só é chamado quando o tipo do Work Item for Bug ou o pedido mencionar defeito explicitamente. `Resumo Do Fluxo` fecha o resultado com 1 a 2 frases resumindo quantos especialistas foram executados nesta chamada.
+
+## qa-health-specialist
+
+Especialista de diagnóstico e auditoria QA **estritamente somente leitura** — nunca cria, atualiza, sincroniza ou publica nada no Azure DevOps, na Wiki ou em arquivos do projeto. Totalmente independente do `qa-orchestrator`: pode ser chamado a qualquer momento, sem depender do fluxo completo.
+
+**Objetivo:** dado um Epic, Feature, User Story ou outro Item De Trabalho, descobrir a hierarquia relacionada e produzir um diagnóstico QA consolidado — hierarquia, Fluxo QA Observado, Estrutura QA, Wiki, Bugs relacionados, cobertura QA, riscos, gaps, inconsistências, Pendências Encontradas, Situação QA e Maturidade QA — sem alterar nada.
+
+**Quando usar:**
+
+* Para saber rapidamente "como está a estrutura QA desta Feature/Epic?" antes de decidir o que fazer.
+* Para auditar um Epic inteiro e priorizar em quais Features investir primeiro.
+* Como checagem prévia antes de rodar `qa-orchestrator`, `qa-bdd-specialist` ou `qa-wiki-specialist`, para saber o que já existe e o que falta.
+
+**Quando não usar:**
+
+* Para criar, publicar ou atualizar Wiki, SPEC, Bugs ou a Estrutura QA mínima — este agente nunca escreve nada; use `qa-orchestrator`, `qa-wiki-specialist`, `qa-bdd-specialist` ou `qa-bug-specialist` para isso.
+* Para gerar SPEC, cenários BDD ou análise de regra de negócio — isso é `qa-bdd-specialist`.
+* Para auditoria estrutural detalhada da Wiki (páginas órfãs, duplicadas, fora do padrão) — isso é `qa-wiki-specialist`.
+* Como Ponto De Entrada, Projeto, Sprint ou Backlog inteiros não são suportados nesta versão — apenas Epic, Feature, User Story ou outro Item De Trabalho, sempre com o Projeto.
+
+**Entradas aceitas:** `<Projeto> <IdentificadorDoItem>`, onde o item é um Epic, Feature, User Story ou outro Item De Trabalho (Task, Bug etc. — o agente sobe até a Feature ancestral mais próxima).
+
+Exemplos de prompts:
+
+```text
+Use o agente qa-health-specialist para diagnosticar a Feature 12345 do projeto Backoffice.
+```
+
+```text
+Use o agente qa-health-specialist para auditar o Epic 9900 do projeto PPDS, sem alterar nada.
+```
+
+```text
+Use o agente qa-health-specialist para verificar a Estrutura QA e a Wiki da User Story 12399 do projeto Backoffice.
+```
+
+Exemplo resumido do relatório esperado:
+
+```text
+# DIAGNOSTICO QA
+
+## Resumo Executivo
+Projeto: Backoffice
+Item Analisado: Epic 9900 - Onboarding
+Features: 6
+Features Com Estrutura QA Completa: 1 de 6
+...
+Situacao QA: Parcial
+Maturidade QA: Basica
+
+Conclusao:
+Estrutura funcional parcialmente consolidada. A estrutura QA, no entanto,
+esta classificada como basica. A principal recomendacao e Criar User Story
+De QA antes de evoluir as demais dimensoes.
+
+## Acoes Rapidas
+🔴 Criar User Story De QA (5 Features)
+🔴 Criar Wiki (6 Features)
+...
+
+## Maturidade QA
+Classificacao: Basica
+Base Da Maturidade QA: Estrutura QA: 🔴 | Wiki: 🔴 | Documentacao: 🟡 | Bugs: ⚪
+
+## Padrao Global Encontrado
+Wiki ausente; User Story De QA ausente — presente em 5 de 6 Features (100,
+101, 104, 108, 112).
+
+## Visao Por Feature
+### Feature 100 - Cadastro De Usuario
+...
+Artefatos QA:
+- Documentacao QA: Nao encontrada
+- Wiki: Nao encontrada
+Pendencias Principais:
+- Segue o Padrao Global Encontrado (ver secao acima)
+...
+
+## Priorizacao - Proximas Acoes Sugeridas
+### Prioridade Alta
+- Criar Wiki (6 Features: 100, 101, 104, 108, 112, 115)
+- Criar User Story De QA (5 Features: 100, 101, 104, 108, 112)
+...
+
+## Conclusao QA
+Estrutura funcional parcialmente consolidada. A estrutura QA, no entanto,
+esta classificada como basica. A principal recomendacao e Criar User Story
+De QA antes de evoluir as demais dimensoes.
+```
+
+Especificação completa (Responsabilidade, Limites, Estratégia De Descoberta, Determinismo, Situação QA, Maturidade QA, Padrão Global De Pendências, Semáforo e o Relatório completo): `agents/qa-health-specialist.md`.
 
 ## Validação De Manutenção
 
@@ -428,7 +556,9 @@ aps-quality-intelligence-multi-ai/
 ├── CLAUDE.md
 ├── .env.example
 ├── agents/
-│   └── (fonte canonica de agentes ja migrados; ver docs/AGENT_PARITY.md)
+│   └── fonte canonica dos cinco agentes (qa-orchestrator, qa-bdd-specialist,
+│       qa-bug-specialist, qa-wiki-specialist, qa-health-specialist)
+│       (ver docs/AGENT_PARITY.md)
 ├── clients/
 │   ├── copilot/
 │   ├── codex/
@@ -447,6 +577,15 @@ aps-quality-intelligence-multi-ai/
 ├── scripts/
 └── skills-lock.json
 ```
+
+## Branches Do Projeto
+
+* `main` — versão estável do framework.
+* `develop` — branch permanente de desenvolvimento, evolução e validação.
+
+Fluxo: `develop` → validação → Pull Request → `main`.
+
+Branches específicas ou temporárias (ex.: para uma mudança pontual) podem existir quando necessário, mas `main` e `develop` são as branches permanentes do projeto.
 
 ## Segurança
 
@@ -469,7 +608,7 @@ Os templates versionados não contêm token. Os arquivos gerados localmente pode
 | `PAT ainda está com valor de exemplo` | Edite `.env`, troque `AZURE_DEVOPS_PAT` e rode setup novamente. |
 | `npx não encontrado` | Instale Node.js/npm e abra um novo terminal. |
 | Cliente não encontrado | Instale Copilot CLI, Codex CLI ou Claude Code conforme o alvo escolhido. |
-| Servidor MCP do projeto não aparece na sessão | Rode setup e validate novamente para o mesmo cliente. |
+| Servidor MCP do projeto não aparece na sessão | Primeiro reconecte/reautentique via comando de MCP do cliente (veja [Antes De Usar Qualquer Agente](#antes-de-usar-qualquer-agente)). Só rode setup e validate novamente se o servidor continuar ausente depois disso. |
 | Agente não encontrado | Confirme que está na raiz do projeto e reinicie o cliente. |
 | Você escolheu Codex mas abriu Copilot | Feche o cliente errado e siga apenas o roteiro Codex. |
 | `Codex mostra Unrecognized command '/allow-all'` | Normal no Codex CLI. Desde o setup, `approval_policy = "on-request"` e `sandbox_mode = "workspace-write"` estão no profile — não é necessário nenhuma flag adicional. |
