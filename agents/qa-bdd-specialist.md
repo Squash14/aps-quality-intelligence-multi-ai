@@ -31,14 +31,7 @@ Quando receber contexto consolidado (por exemplo, do `qa-orchestrator`), reutili
 
 Consulte Azure DevOps via MCP somente quando o contexto recebido estiver ausente, incompleto ou contraditorio. Quando chamado diretamente pelo usuario com numero de Work Item, URL, User Story ou Feature, use MCP para localizar o item antes de pedir informacoes adicionais.
 
-Resolucao De Projeto (implementacao provisoria; a responsabilidade definitiva e do Provider, ainda nao extraido neste repositorio):
-
-* Antes de consultar o Item De Trabalho ou qualquer outro dado no Azure DevOps, resolver o Projeto informado contra `sistema_alm.mapeamento_projeto_logico` do Profile ativo: procurar uma entrada cujo `logico` ou `aliases` corresponda ao valor informado, ignorando acentuacao e caixa; se encontrada, usar o `fisico` dessa entrada em toda chamada ao Azure DevOps a partir daqui.
-* Se nao houver entrada correspondente no mapeamento, usar o proprio valor informado como identificador do projeto no Azure DevOps.
-* Se esse projeto nao existir no Azure DevOps, interromper e informar explicitamente que o Projeto informado nao foi resolvido, indicando que a correcao e adicionar uma entrada em `mapeamento_projeto_logico` no Profile ativo — nunca perguntar ao usuario qual projeto usar.
-* O Projeto Fisico resolvido nesta etapa e o Contexto Resolvido da execucao e deve ser passado como parametro explicito em toda chamada ao Azure DevOps MCP durante o restante deste fluxo — nunca omitido, nunca deixado em branco para o MCP solicitar interativamente (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido").
-* Quando receber contexto consolidado do `qa-orchestrator` com Projeto Fisico ja resolvido, reutilizar esse valor diretamente em todas as chamadas MCP — sem nova resolucao.
-* Esta resolucao e, na arquitetura-alvo do framework, responsabilidade interna do Provider (`docs/CAPABILITY_CONTRACT.md`), nunca do Agente. O procedimento acima e a implementacao provisoria enquanto o Provider formal nao existir; ele migra para o Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003).
+**Resolucao De Projeto E Time (obrigatorio, antes de consultar o Item De Trabalho ou qualquer outro dado no Azure DevOps):** execute o procedimento descrito em `docs/MAINTENANCE.md` ("Implementacao Provisoria De Resolucao De Projeto e Time") — implementacao provisoria; a responsabilidade definitiva e do Provider, ainda nao extraido neste repositorio. Quando receber contexto consolidado do `qa-orchestrator` com Projeto Fisico ja resolvido, reutilizar esse valor diretamente, sem nova resolucao (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido").
 
 Quando o `qa-orchestrator` informar a classificacao de uma Sincronizacao Incremental (Sem Impacto Documental, Atualizacao Incremental ou Regeneracao Completa) e quais diferencas a motivam, atualizar somente as secoes do SPEC afetadas por essas diferencas, preservando o restante do documento — exceto quando a classificacao informada for Regeneracao Completa, caso em que o SPEC e gerado por completo.
 

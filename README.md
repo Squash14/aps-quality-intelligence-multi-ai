@@ -1,6 +1,7 @@
 # QA Agent Suite Multi IA
 
-Automação de documentação QA com Azure DevOps MCP e agentes especializados. O projeto pode ser usado com **Codex**, **GitHub Copilot** ou **Claude Code**, em **macOS** e **Windows**.
+Automação de documentação QA com Azure DevOps MCP e agentes especializados.
+O projeto pode ser usado com **Codex**, **GitHub Copilot** ou **Claude Code**, em **macOS** e **Windows**.
 
 Você escolhe um cliente e segue somente o roteiro dele. Não precisa configurar os três para começar.
 

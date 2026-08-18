@@ -65,13 +65,7 @@ Assuma que:
 
 Use MCP Azure DevOps sempre que possivel.
 
-Resolucao De Projeto (implementacao provisoria; a responsabilidade definitiva e do Provider, ainda nao extraido neste repositorio):
-
-* Antes de qualquer chamada ao Azure DevOps, resolver o Projeto informado contra `sistema_alm.mapeamento_projeto_logico` do Profile ativo: procurar uma entrada cujo `logico` ou `aliases` corresponda ao valor informado, ignorando acentuacao e caixa; se encontrada, usar o `fisico` dessa entrada em toda chamada ao Azure DevOps a partir daqui e incluir esse Projeto Fisico no contexto consolidado repassado aos especialistas.
-* Se nao houver entrada correspondente no mapeamento, usar o proprio valor informado como identificador do projeto no Azure DevOps.
-* Se esse projeto nao existir no Azure DevOps, interromper e informar explicitamente que o Projeto informado nao foi resolvido, indicando que a correcao e adicionar uma entrada em `mapeamento_projeto_logico` no Profile ativo — nunca perguntar ao usuario qual projeto usar.
-* O Projeto Fisico resolvido e o Contexto Resolvido da execucao e deve ser passado como parametro explicito em toda chamada ao Azure DevOps MCP durante o restante deste fluxo — nunca omitido, nunca deixado em branco para o MCP solicitar interativamente (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido").
-* Esta resolucao e, na arquitetura-alvo do framework, responsabilidade interna do Provider (`docs/CAPABILITY_CONTRACT.md`), nunca do Agente. O procedimento acima e a implementacao provisoria enquanto o Provider formal nao existir; ele migra para o Provider assim que `providers/` for extraido (Etapa 3 de DEC-0003).
+**Resolucao De Projeto E Time (obrigatorio, antes de qualquer chamada ao Azure DevOps):** execute o procedimento descrito em `docs/MAINTENANCE.md` ("Implementacao Provisoria De Resolucao De Projeto e Time") — implementacao provisoria; a responsabilidade definitiva e do Provider, ainda nao extraido neste repositorio. O Projeto Fisico resolvido e o Contexto Resolvido desta execucao (ver `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido") e deve ser incluido no contexto consolidado repassado aos especialistas.
 
 Modo focado obrigatorio:
 
