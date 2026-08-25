@@ -71,21 +71,24 @@ Modo focado obrigatorio:
 
 1. Usar diretamente o projeto informado.
 2. Buscar diretamente o Item De Trabalho pelo ID informado.
-3. Obter campos essenciais: titulo, descricao, criterios de aceite, comentarios relevantes, estado e tipo.
-4. Obter apenas relacionamentos diretos ja retornados pelo Item De Trabalho.
-5. Carregar somente relacoes que agreguem contexto QA: Epic pai, Feature pai, User Stories relacionadas, Tasks relacionadas e Bugs relacionados.
-6. Consolidar o contexto para os especialistas.
+3. Obter campos essenciais: titulo, descricao, criterios de aceite, comentarios relevantes, estado, tipo e relacoes diretas. Toda chamada desta etapa, incluindo a que obtem comentarios, reutiliza explicitamente o mesmo Projeto Fisico do Contexto Resolvido (ver "Resolucao De Projeto E Time" acima) — nunca uma chamada com esse parametro omitido, mesmo quando o Item De Trabalho ja foi identificado por ID.
+4. Consolidar o contexto para os especialistas.
 
-Pare a coleta quando houver evidencia suficiente para gerar documentacao QA.
+**Descoberta De Contexto Funcional (obrigatoria, qualquer tipo de Item De Trabalho — Epic, Feature, User Story, Bug, Task ou outro, sem regra dedicada por tipo):** este Agente inicia a partir de qualquer tipo de Item De Trabalho, nunca apenas Feature ou User Story. Apos o passo 3 acima:
 
-Nao listar backlog, sprint completa, todos os projetos, todos os Itens De Trabalho ou estruturas amplas.
+1. Verificar se o Item De Trabalho informado ja atende a Validacao De Suficiencia — o criterio definido e mantido por `qa-bdd-specialist`, reaproveitado aqui por referencia, nunca reescrito ou duplicado. Se atende, usar esse Item De Trabalho diretamente como contexto funcional — nenhuma expansao adicional e necessaria.
+2. Se nao atende, expandir para as relacoes diretas ja retornadas no passo 3 (Epic pai, Feature pai, User Stories relacionadas, Tasks relacionadas e Bugs relacionados) — nunca uma nova consulta so para listar relacoes, ja que elas ja vieram no retorno do passo 3. Entre essas relacoes, escolher o proximo candidato ainda nao carregado nesta execucao e buscar o conteudo apenas dele (`Buscar Item De Trabalho`), repetindo a verificacao de Validacao De Suficiencia sobre o conteudo obtido.
+3. Repetir a expansao um Item De Trabalho por vez ate encontrar o primeiro cujo conteudo atenda a Validacao De Suficiencia, ou ate esgotar todos os itens alcancaveis por relacoes diretas em cadeia a partir do Item De Trabalho informado.
+4. Nunca consultar novamente, nesta execucao, um Item De Trabalho ja carregado durante a descoberta — manter o conjunto de itens ja buscados e reutiliza-lo antes de qualquer nova chamada; cada Item De Trabalho novo e buscado no maximo uma vez, mesmo quando aparecer como relacao de mais de um item no caminho percorrido. Evitar toda chamada redundante ao Azure DevOps: uma nova consulta so acontece quando o conteudo daquele Item De Trabalho especifico ainda nao foi obtido e e realmente necessario para avaliar a Validacao De Suficiencia.
+5. Todo o contexto acumulado durante a descoberta (o Item De Trabalho informado e cada relacionado carregado no caminho) e reaproveitado diretamente pelos passos seguintes deste fluxo (Sincronizacao Incremental, Decisao De Delegacao, Estrutura QA Minima Da Feature) — nenhum deles refaz `Buscar Item De Trabalho` para um item que a descoberta ja carregou.
+6. Se o conjunto inteiro alcancavel estiver vazio ou nenhum item atender a Validacao De Suficiencia, interromper a coleta e informar explicitamente, no Resultado Final, que nao ha contexto funcional suficiente para gerar SPEC, BDD ou SDD — no mesmo formato ja usado por `qa-bdd-specialist` para esse cenario (`INFORMACOES INSUFICIENTES`) — sem prosseguir para Sincronizacao Incremental, Decisao De Delegacao ou qualquer escrita.
 
-Ative modo amplo controlado somente quando:
+Nao listar backlog, sprint completa, todos os projetos, todos os Itens De Trabalho ou estruturas amplas — a Descoberta De Contexto Funcional permanece sempre limitada ao conjunto conectado por relacoes diretas a partir do Item De Trabalho informado.
 
-* o Item De Trabalho nao for encontrado no projeto informado;
-* o Item De Trabalho nao tiver dados minimos;
-* os relacionamentos diretos forem insuficientes;
-* o MCP retornar erro ou ambiguidade.
+Ative modo amplo controlado apenas quando:
+
+* o Item De Trabalho informado nao for encontrado no projeto informado;
+* o MCP retornar erro ou ambiguidade ao buscar qualquer Item De Trabalho durante a descoberta.
 
 No modo amplo controlado, consulte apenas o necessario e pare assim que houver evidencia suficiente.
 
