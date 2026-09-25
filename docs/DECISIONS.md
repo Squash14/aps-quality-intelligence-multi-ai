@@ -576,6 +576,37 @@ Consequencias:
 Principios relacionados:
 Principio 1 (Simplicidade Antes De Tudo), Principio 2 (Evolucao Incremental), Principio 5 (Contrato Estavel, Implementacao Substituivel), Principio 9 (Principio Da Evidencia).
 
+### DEC-0015 - Projeto opcional na entrada e fim do default de Projeto no Profile
+
+* Data: 2026-09-14
+* Status: Ativa
+
+Contexto:
+Uma execucao real do `qa-health-specialist` sobre o Epic 15021 usou o projeto errado ("Arquitetura") em vez do projeto real do Work Item ("Inteligencia Artificial"). Investigacao confirmou duas causas sobrepostas: (1) o unico Profile do repositorio, `profiles/apsen-arquitetura/profile.json`, declarava `sistema_alm.projeto_padrao: "Arquitetura"` e era o unico Profile presente, carregado em toda execucao independentemente do projeto real do Work Item — um campo nunca lido por nenhum Agente (confirmado por busca em todo o repositorio), mas cuja presenca no unico Profile carregado no inicio de toda execucao funciona como uma ancora de contexto; (2) o Contrato De Entrada (`docs/DOMAIN_CONTRACT.md`) e a "Implementacao Provisoria De Resolucao De Projeto e Time" (`docs/MAINTENANCE.md`) exigiam Projeto sempre explicito na entrada e proibiam qualquer chamada ao MCP com esse parametro omitido — mesmo quando so o identificador do Item De Trabalho era informado. Essa exigencia contraria o comportamento real da Capacidade subjacente: o schema da ferramenta MCP por tras de `Buscar Item De Trabalho` (`wit_work_item`, action `get`) declara `id` como obrigatorio e `project` como opcional, porque o identificador de um Work Item e unico na organizacao inteira no Azure DevOps — o Sistema ALM ja sabe encontrar o item so pelo ID. O uso historico relatado pelo mantenedor confirma isso: passar somente o numero do Work Item, sem Projeto, sempre funcionou antes de o mecanismo de Profile (commit `e4a656e`, 2026-07-27, ver DEC-0004) tornar Projeto obrigatorio em toda chamada.
+
+Decisao:
+* `docs/DOMAIN_CONTRACT.md`, "Contrato De Entrada": o Item De Trabalho continua sempre obrigatorio; o Projeto passa a ser opcional na entrada. Quando informado, e resolvido como Projeto (Logico) normalmente. Quando omitido, a implementacao busca o Item De Trabalho apenas pelo identificador e usa o Projeto Fisico devolvido pelo proprio Sistema ALM como Projeto da execucao — nunca um Projeto de conveniencia.
+* `docs/DOMAIN_CONTRACT.md`, "Propagacao Do Contexto Resolvido": documentadas as duas vias de formacao do Contexto Resolvido (Projeto informado vs. Projeto descoberto pela resposta da busca inicial); a regra de nunca omitir o Projeto em chamadas MCP passa a reger explicitamente apenas chamadas posteriores a formacao do Contexto Resolvido, nunca a propria busca inicial sem Projeto.
+* `docs/MAINTENANCE.md`, "Implementacao Provisoria De Resolucao De Projeto e Time": descreve as duas vias correspondentes; via 2 (Projeto nao informado) invoca `Buscar Item De Trabalho` somente com o identificador e proibe explicitamente usar qualquer Projeto padrao de Profile como substituto.
+* `agents/qa-orchestrator.md`: `<WorkItemID>` sozinho passa a ser entrada valida (alem de `<Projeto> <WorkItemID>`); "Modo focado obrigatorio" atualizado para as duas vias; os tres clientes regenerados via `scripts/render-agents.mjs`.
+* `profiles/apsen-arquitetura/profile.json`: removido `sistema_alm.projeto_padrao` — campo nunca lido por nenhum Agente e que so existia como ancora de contexto perigosa.
+
+Justificativa / Evidencia:
+Leitura do schema real da ferramenta MCP (`wit_work_item`, action `get`) confirma que `project` e opcional para buscar por ID — a exigencia de sempre resolver e passar um Projeto nao reflete uma limitacao real da Capacidade, e sim uma regra provisoria mais restritiva do que o necessario, introduzida junto do mecanismo de Profile (DEC-0004) sem essa distincao. Busca em todo o repositorio confirmou `projeto_padrao` como campo orfao: presente apenas em `profile.json`, nunca referenciado em nenhum Agente ou documento.
+
+Alternativas consideradas:
+* Manter Projeto sempre obrigatorio e apenas adicionar uma entrada de mapeamento para cada novo workspace/projeto conforme aparecer — descartado: nao resolve a causa raiz (a exigencia contraria a Capacidade real), apenas adia o proximo caso de projeto sem mapeamento; exigiria mapeamento previo de todo projeto do Azure DevOps para o framework funcionar, o que a propria API nao exige.
+* Manter `projeto_padrao` documentado como "nao usado, ignorar" em vez de remove-lo — descartado: um campo orfao e sem instrucao que o proiba explicitamente continua sendo uma ancora de contexto disponivel toda vez que o Profile e lido; remover elimina o risco na raiz (Principio 1).
+
+Consequencias:
+* `<WorkItemID>` sozinho e entrada valida para `qa-orchestrator` (e, por consequencia, para `qa-bdd-specialist`, `qa-wiki-specialist`, `qa-bug-specialist`, `qa-health-specialist`, `qa-epic-specialist`, que apenas referenciam o mesmo procedimento em `docs/MAINTENANCE.md`).
+* Quando o Projeto nao for informado, o Projeto Fisico e sempre descoberto a partir da resposta real do Azure DevOps sobre o Item De Trabalho — nunca de um default de Profile.
+* Nenhuma Capacidade nova; `docs/CAPABILITY_CONTRACT.md` nao muda.
+* `profiles/apsen-arquitetura/profile.json` perde o campo `projeto_padrao`; nenhum outro campo do Profile e afetado.
+
+Principios relacionados:
+Principio 1 (Simplicidade Antes De Tudo), Principio 5 (Contrato Estavel, Implementacao Substituivel), Principio 9 (Principio Da Evidencia).
+
 ### DEC-0014 - Achados Da Auditoria Documental no `qa-wiki-specialist`
 
 * Data: 2026-08-17

@@ -3,7 +3,6 @@
   "provider": "azure-devops",
   "sistema_alm": {
     "organizacao": "Apsen",
-    "projeto_padrao": "Arquitetura",
     "mapeamento_projeto_logico": [
       { "logico": "PPDS", "fisico": "Arquitetura", "aliases": ["ppds"] }
     ],

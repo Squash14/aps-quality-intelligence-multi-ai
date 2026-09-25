@@ -45,6 +45,8 @@ Formato obrigatorio:
 <Projeto> <WorkItemID>
 ```
 
+`<Projeto>` e opcional: aceito tambem apenas `<WorkItemID>`, sozinho — ver "Resolucao De Projeto E Time" abaixo para como o Projeto e descoberto nesse caso.
+
 Exemplos:
 
 ```text
@@ -53,12 +55,13 @@ Backoffice 11234
 Marketing 9988
 Vizu 5432
 GestaoPortfolioAgile 7788
+7788
 ```
 
 Assuma que:
 
-* o primeiro valor e o projeto;
-* o segundo valor e o Item De Trabalho;
+* quando dois valores forem informados, o primeiro e o projeto e o segundo e o Item De Trabalho;
+* quando um unico valor for informado, e o Item De Trabalho — o Projeto nunca e solicitado ao usuario nem preenchido por um projeto de conveniencia, e sim descoberto durante "Resolucao De Projeto E Time" abaixo;
 * projeto, id, wiki, caminho e pagina nao devem ser solicitados novamente quando puderem ser descobertos ou ja estiverem no contexto.
 
 ## Coleta Azure DevOps
@@ -69,9 +72,9 @@ Use MCP Azure DevOps sempre que possivel.
 
 Modo focado obrigatorio:
 
-1. Usar diretamente o projeto informado.
-2. Buscar diretamente o Item De Trabalho pelo ID informado.
-3. Obter campos essenciais: titulo, descricao, criterios de aceite, comentarios relevantes, estado, tipo e relacoes diretas. Toda chamada desta etapa, incluindo a que obtem comentarios, reutiliza explicitamente o mesmo Projeto Fisico do Contexto Resolvido (ver "Resolucao De Projeto E Time" acima) — nunca uma chamada com esse parametro omitido, mesmo quando o Item De Trabalho ja foi identificado por ID.
+1. Se o Projeto foi informado, resolve-lo conforme "Resolucao De Projeto E Time" acima antes de buscar o Item De Trabalho.
+2. Buscar o Item De Trabalho pelo ID informado — com o Projeto Fisico ja resolvido no passo 1 quando houver, ou sem Projeto na chamada quando o usuario nao informou nenhum (ver "Resolucao De Projeto E Time" acima, via 2). Quando o Projeto nao foi informado, o Projeto Fisico devolvido nesta resposta passa a ser o Contexto Resolvido a partir daqui.
+3. Obter campos essenciais: titulo, descricao, criterios de aceite, comentarios relevantes, estado, tipo e relacoes diretas. A partir deste ponto o Contexto Resolvido ja existe sempre — toda chamada desta etapa, incluindo a que obtem comentarios, reutiliza explicitamente o mesmo Projeto Fisico (ver "Resolucao De Projeto E Time" acima) — nunca uma chamada com esse parametro omitido depois que o Contexto Resolvido ja existe.
 4. Consolidar o contexto para os especialistas.
 
 **Descoberta De Contexto Funcional (obrigatoria, qualquer tipo de Item De Trabalho — Epic, Feature, User Story, Bug, Task ou outro, sem regra dedicada por tipo):** este Agente inicia a partir de qualquer tipo de Item De Trabalho, nunca apenas Feature ou User Story. Apos o passo 3 acima:

@@ -178,10 +178,11 @@ Um Projeto (Logico) e realizado, dentro de um Sistema ALM, por um projeto ou con
 
 ### Contrato De Entrada
 
-* Todo processamento comeca a partir da identificacao explicita de um Projeto e de um Item De Trabalho dentro dele.
-* Nenhum processamento comeca sem essa dupla identificacao.
+* Todo processamento comeca a partir da identificacao explicita de um Item De Trabalho. O Projeto e opcional na entrada.
+* Nenhum processamento comeca sem a identificacao do Item De Trabalho.
 * A entrada nunca pressupoe escopo amplo — multiplos projetos, todos os itens de um Projeto, ou todo o ciclo de trabalho corrente. O escopo padrao e sempre o Item De Trabalho identificado e suas relacoes diretas.
-* O Projeto desta entrada e sempre o Projeto (Logico): o identificador que o usuario informa, agnostico de Sistema ALM. Resolver esse identificador para o projeto ou container fisico correspondente dentro do Sistema ALM concreto em uso (ex.: nome de projeto no Azure DevOps, projeto ou site no Jira) e responsabilidade da implementacao (Provider/Profile) que cumpre este contrato — nunca uma equivalencia literal assumida por este documento ou por um Agente.
+* Quando o usuario informa um Projeto junto do Item De Trabalho, esse Projeto e sempre o Projeto (Logico): o identificador que o usuario informa, agnostico de Sistema ALM. Resolver esse identificador para o projeto ou container fisico correspondente dentro do Sistema ALM concreto em uso (ex.: nome de projeto no Azure DevOps, projeto ou site no Jira) e responsabilidade da implementacao (Provider/Profile) que cumpre este contrato — nunca uma equivalencia literal assumida por este documento ou por um Agente.
+* Quando o usuario informa somente o Item De Trabalho, sem Projeto, a implementacao (Provider/Profile) busca o Item De Trabalho apenas pelo identificador — sem inventar, supor ou usar qualquer Projeto padrao — e usa o Projeto Fisico devolvido pelo proprio Sistema ALM como Projeto desta execucao. A ausencia de Projeto na entrada nunca e preenchida por um valor de conveniencia de Profile ou de configuracao; apenas pela resposta real do Sistema ALM sobre onde aquele Item De Trabalho vive.
 
 ### Contexto De Execução
 
@@ -193,8 +194,8 @@ Um Projeto (Logico) e realizado, dentro de um Sistema ALM, por um projeto ou con
 
 **Propagacao Do Contexto Resolvido (regra global, todos os Agentes, todos os ALMs):**
 
-* Sempre que o Agente, como implementacao provisoria do Provider (ver `docs/MAINTENANCE.md`), resolver o Projeto (Logico) para um Projeto Fisico — ou resolver o Time a partir de `sistema_alm.time_padrao` do Profile ativo — esses valores formam o **Contexto Resolvido** da execucao e devem ser mantidos durante todo o fluxo restante.
-* Todo Agente que invoque uma Capacidade cujo mecanismo de transporte (MCP, API direta ou equivalente) aceite projeto ou time como parametro deve passar o Contexto Resolvido **explicitamente em cada chamada** — nunca omitido, nunca deixado em branco, nunca delegado ao mecanismo de transporte para solicitar interativamente ao usuario.
+* O Contexto Resolvido se forma por uma de duas vias, nunca por suposicao: (1) o usuario informa um Projeto (Logico) — o Agente, como implementacao provisoria do Provider (ver `docs/MAINTENANCE.md`), resolve para o Projeto Fisico correspondente; ou (2) o usuario informa somente o Item De Trabalho — o Agente busca esse item pelo identificador, sem Projeto na chamada, e usa o Projeto Fisico devolvido pelo Sistema ALM como Contexto Resolvido. Da mesma forma, resolver o Time a partir de `sistema_alm.time_padrao` do Profile ativo, quando aplicavel, tambem integra o Contexto Resolvido. Esses valores devem ser mantidos durante todo o fluxo restante.
+* A partir do momento em que o Contexto Resolvido existir (por qualquer uma das duas vias acima), todo Agente que invoque uma Capacidade cujo mecanismo de transporte (MCP, API direta ou equivalente) aceite projeto ou time como parametro deve passa-lo **explicitamente em cada chamada** — nunca omitido, nunca deixado em branco, nunca delegado ao mecanismo de transporte para solicitar interativamente ao usuario. Esta regra rege chamadas posteriores a resolucao inicial; a propria busca inicial do Item De Trabalho, quando o usuario nao informou Projeto, e a excecao explicita descrita no Contrato De Entrada (via 2 acima).
 * Se o mecanismo de transporte solicitar selecao interativa de projeto ou time em uma sessao onde esses valores ja foram resolvidos, isso indica parametro omitido — a correcao e incluir o valor resolvido na chamada; nunca responder ao seletor interativo.
 * Quando um Agente recebe contexto consolidado de outro Agente (ex.: `qa-orchestrator` delega para `qa-bdd-specialist`), o Projeto Fisico ja resolvido e o Time ja resolvido devem ser incluidos nesse contexto e reutilizados pelo Agente receptor sem nova resolucao.
 * Esta regra e agnostica de ALM e de mecanismo de transporte: aplica-se a Azure DevOps, Jira ou qualquer outro Provider futuro.
